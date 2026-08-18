@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "dino_s_p2b_cls_weighted_patch_equal_fusion_336",
+  "family": "dino_patch",
+  "variant": "p2b",
+  "base_config": "PAD_Lite/configs/dino_patch_p2b_equal_fusion_336.json",
+  "description": "P2b fixed 50/50 all-candidate joint cosine representation using frozen P0 CLS-B2 and P2a dynamic Weighted Patch caches.",
+  "text_anchor": true,
+  "overrides": {},
+  "legacy_output_root": "PAD_Lite/outputs/dino_patch_safe_letterbox_336/p2b_cls_weighted_patch_equal_fusion",
+  "tags": ["dino-small", "p2b", "cls", "weighted-patch", "equal-fusion", "all-candidates", "text-anchor-inherited"]
+}

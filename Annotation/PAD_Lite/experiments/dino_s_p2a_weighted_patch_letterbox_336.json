@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "dino_s_p2a_weighted_patch_letterbox_336",
+  "family": "dino_patch",
+  "variant": "p2a",
+  "base_config": "PAD_Lite/configs/dino_patch_p2a_weighted_letterbox_336.json",
+  "description": "P2a dynamic content-weighted masked Patch-only retrieval with frozen DINOv2-Small at Letterbox 336.",
+  "text_anchor": false,
+  "overrides": {},
+  "legacy_output_root": "PAD_Lite/outputs/dino_patch_safe_letterbox_336/p2a_weighted_patch_only",
+  "tags": ["dino-small", "p2a", "weighted-patch", "patch-only", "letterbox", "no-text"]
+}

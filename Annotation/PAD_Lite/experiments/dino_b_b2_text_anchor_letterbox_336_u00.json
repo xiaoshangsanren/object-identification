@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "dino_b_b2_text_anchor_letterbox_336_u00",
+  "family": "dino",
+  "variant": "b2",
+  "base_config": "PAD_Lite/configs/dino_base_letterbox_text_anchor_336.json",
+  "description": "DINOv2-Base B2 Letterbox 336 with training-only text anchor and frozen visual backbone.",
+  "text_anchor": true,
+  "overrides": {},
+  "legacy_output_root": "PAD_Lite/outputs/dino_base_letterbox_text_anchor_336",
+  "tags": ["dino-base", "b2", "text-anchor", "letterbox", "336"]
+}

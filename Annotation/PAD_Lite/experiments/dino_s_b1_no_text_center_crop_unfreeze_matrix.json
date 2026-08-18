@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "family": "dino",
+  "variant": "b1",
+  "base_config": "PAD_Lite/configs/dino_center_crop_text_anchor.json",
+  "description": "DINOv2-Small B1 CenterCrop 224 without text anchor; unfreeze last {value} blocks.",
+  "text_anchor": false,
+  "overrides": {},
+  "legacy_output_root": "PAD_Lite/outputs/dino_backbone_sweep/unfreeze_{value:02d}",
+  "tags": ["dino-small", "b1", "no-text", "center-crop", "id", "triplet", "unfreeze-sweep"],
+  "matrix": {
+    "field": "model.unfreeze_last_blocks",
+    "values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "name_template": "dino_s_b1_no_text_center_crop_224_u{value:02d}"
+  }
+}

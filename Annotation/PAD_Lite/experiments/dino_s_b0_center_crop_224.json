@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "dino_s_b0_center_crop_224",
+  "family": "dino",
+  "variant": "b0",
+  "base_config": "PAD_Lite/configs/dino_center_crop_text_anchor.json",
+  "description": "Frozen DINOv2-Small CLS retrieval baseline with Resize plus CenterCrop at 224px.",
+  "text_anchor": false,
+  "overrides": {},
+  "legacy_output_root": "PAD_Lite/outputs",
+  "tags": ["dino-small", "b0", "frozen", "center-crop", "baseline"]
+}

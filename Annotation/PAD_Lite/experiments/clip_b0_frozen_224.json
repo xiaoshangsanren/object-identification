@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "clip_b0_frozen_224",
+  "family": "clip",
+  "variant": "b0",
+  "base_config": "PAD_Lite/configs/default.json",
+  "description": "Frozen CLIP ViT-B/32 retrieval baseline at 224px.",
+  "text_anchor": false,
+  "overrides": {},
+  "legacy_output_root": "PAD_Lite/outputs",
+  "tags": ["clip", "b0", "frozen", "baseline"]
+}

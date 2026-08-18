@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "name": "detector_zero_shot_yolo26n_vs_detr_r50",
+  "description": "No-training comparison of the current YOLO proposal detector and COCO-pretrained DETR on raw Russian-Military-Vehicles images.",
+  "paths": {
+    "image_root": "../datasets/Russian-Military-Vehicles/train",
+    "yolo_model": "Resource/models/yolo/yolo26n.pt",
+    "detr_model": "Resource/models/detr-resnet-50",
+    "output_root": "PAD_Lite/outputs/detector_zero_shot"
+  },
+  "evaluation": {
+    "candidate_class_names": [
+      "car",
+      "motorcycle",
+      "bus",
+      "truck"
+    ],
+    "yolo_image_size": 640,
+    "ap_score_floor": 0.001,
+    "operating_score_threshold": 0.3,
+    "iou_thresholds": [
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95
+    ],
+    "max_detections_per_image": 100,
+    "batch_size": 8,
+    "smoke_limit": 8,
+    "small_object_area": 1024
+  }
+}

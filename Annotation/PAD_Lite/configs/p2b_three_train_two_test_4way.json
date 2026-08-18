@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "name": "p2b_three_train_two_test_4way",
+  "description": "All 10 combinations of three original class folds for training and two folds for four-way unseen-class P2b retrieval.",
+  "seed": 2026,
+  "paths": {
+    "source_splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_v1",
+    "generated_splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_3train_2test_4way_v1",
+    "output_root": "PAD_Lite/outputs/p2b_three_train_two_test_4way_v1",
+    "p0_base_config": "PAD_Lite/configs/dino_letterbox_text_anchor.json",
+    "p2a_base_config": "PAD_Lite/configs/dino_patch_p2a_weighted_letterbox_336.json",
+    "p2b_base_config": "PAD_Lite/configs/dino_patch_p2b_equal_fusion_336.json"
+  },
+  "protocol": {
+    "source_fold_count": 5,
+    "train_fold_count": 3,
+    "test_fold_count": 2,
+    "test_class_count": 4,
+    "all_test_fold_combinations": true,
+    "episode_count": 10,
+    "reuse_original_class_train_val": true,
+    "reuse_original_novel_support_query": true
+  },
+  "p0_overrides": {
+    "data.input_mode": "letterbox",
+    "data.image_size": 336,
+    "data.resize_short_edge": 384,
+    "data.eval_batch_size": 32,
+    "model.backbone_name": "dinov2-small",
+    "model.unfreeze_last_blocks": 0,
+    "b2.epochs": 30
+  },
+  "p2a_overrides": {
+    "p2a.epochs": 30,
+    "diagnostics.compare_with_p0": false
+  },
+  "p2b_overrides": {
+    "p2b.cls_weight": 0.5,
+    "p2b.patch_weight": 0.5,
+    "p2b.candidate_scope": "all_classes",
+    "p2b.calibration": false,
+    "p2b.prototype_gate": false,
+    "p2b.query_margin_gate": false,
+    "p2b.novel_query_tuning": false
+  }
+}

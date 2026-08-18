@@ -1,0 +1,54 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Secrets and local configuration
+.env
+.env.*
+*.key
+*.pem
+
+# Generated logs, temporary files, and experiment outputs
+logs/
+runs/
+outputs/
+tmp/
+Annotation/PAD_Lite/evaluation_data/
+
+# Bundled runtime and third-party binaries
+Annotation/runtime/
+Annotation/tools/ffmpeg/
+Annotation/tools/7zip/
+Annotation/prerequisites/
+
+# Local datasets and generated media/indexes
+Annotation/Resource/models/
+Annotation/Resource/videos/
+Annotation/Resource/clip_gallery/
+Annotation/Resource/clip_gallery_eval_10class_v1/
+
+# Model checkpoints and common large artifacts
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.bin
+*.dll
+*.pyd
+*.exe
+*.mp4
+*.avi
+*.mov
+

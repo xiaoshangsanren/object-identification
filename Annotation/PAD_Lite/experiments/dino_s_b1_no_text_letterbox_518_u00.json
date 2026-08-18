@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "name": "dino_s_b1_no_text_letterbox_518_u00",
+  "family": "dino",
+  "variant": "b1",
+  "base_config": "PAD_Lite/configs/dino_letterbox_no_text.json",
+  "description": "DINOv2-Small B1 Letterbox 518 without text anchor; frozen backbone and trainable retrieval head.",
+  "text_anchor": false,
+  "overrides": {
+    "data.image_size": 518,
+    "data.eval_batch_size": 16,
+    "model.unfreeze_last_blocks": 0
+  },
+  "legacy_output_root": "PAD_Lite/outputs/dino_letterbox_no_text_518",
+  "tags": ["dino-small", "b1", "no-text", "letterbox", "resolution"]
+}

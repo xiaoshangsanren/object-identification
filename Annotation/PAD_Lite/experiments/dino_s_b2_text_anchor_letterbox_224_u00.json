@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "name": "dino_s_b2_text_anchor_letterbox_224_u00",
+  "family": "dino",
+  "variant": "b2",
+  "base_config": "PAD_Lite/configs/dino_letterbox_text_anchor.json",
+  "description": "DINOv2-Small B2 Letterbox 224 with training-only text anchor and frozen visual backbone.",
+  "text_anchor": true,
+  "overrides": {
+    "data.image_size": 224,
+    "data.eval_batch_size": 64,
+    "model.unfreeze_last_blocks": 0
+  },
+  "legacy_output_root": "PAD_Lite/outputs/dino_letterbox_text_anchor",
+  "tags": ["dino-small", "b2", "text-anchor", "letterbox", "resolution"]
+}

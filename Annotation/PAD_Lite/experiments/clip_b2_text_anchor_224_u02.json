@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "name": "clip_b2_text_anchor_224_u02",
+  "family": "clip",
+  "variant": "b2",
+  "base_config": "PAD_Lite/configs/default.json",
+  "description": "CLIP B2 with training-only text anchor, ID and Triplet losses; last 2 blocks unfrozen.",
+  "text_anchor": true,
+  "overrides": {
+    "model.unfreeze_last_blocks": 2
+  },
+  "legacy_output_root": "PAD_Lite/outputs",
+  "tags": ["clip", "b2", "text-anchor", "id", "triplet"]
+}

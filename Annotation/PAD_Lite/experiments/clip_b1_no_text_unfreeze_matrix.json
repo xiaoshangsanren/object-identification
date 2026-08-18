@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "family": "clip",
+  "variant": "b1",
+  "base_config": "PAD_Lite/configs/default.json",
+  "description": "CLIP B1 without text anchor; unfreeze the last {value} visual Transformer blocks.",
+  "text_anchor": false,
+  "overrides": {},
+  "legacy_output_root": "PAD_Lite/outputs/clip_backbone_sweep/unfreeze_{value:02d}",
+  "tags": ["clip", "b1", "no-text", "id", "triplet", "unfreeze-sweep"],
+  "matrix": {
+    "field": "model.unfreeze_last_blocks",
+    "values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "name_template": "clip_b1_no_text_224_u{value:02d}"
+  }
+}

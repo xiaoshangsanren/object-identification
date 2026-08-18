@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "dino_s_p1a_patch_average_letterbox_336",
+  "family": "dino_patch",
+  "variant": "p1a",
+  "base_config": "PAD_Lite/configs/dino_patch_safe_letterbox_336.json",
+  "description": "P1a masked Patch Average only, DINOv2-Small Letterbox 336, without text anchor.",
+  "text_anchor": false,
+  "overrides": {},
+  "legacy_output_root": "PAD_Lite/outputs/dino_patch_safe_letterbox_336/p1a_patch_average_only",
+  "tags": ["dino-small", "p1a", "patch-average", "letterbox", "no-text"]
+}

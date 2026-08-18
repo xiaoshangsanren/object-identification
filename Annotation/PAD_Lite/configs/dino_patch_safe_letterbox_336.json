@@ -1,0 +1,46 @@
+{
+  "seed": 2026,
+  "paths": {
+    "crop_root": "../datasets/processed/russian_pad",
+    "splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_v1",
+    "clip_model": "Resource/models/clip-vit-base-patch32",
+    "dino_model": "Resource/models/dinov2-small",
+    "output_root": "PAD_Lite/outputs/dino_patch_safe_letterbox_336/p1a_patch_average_only"
+  },
+  "data": {
+    "input_mode": "letterbox",
+    "image_size": 336,
+    "resize_short_edge": 384,
+    "workers": 4,
+    "eval_batch_size": 32,
+    "amp": true,
+    "exclude_tiny_train": true,
+    "exclude_tiny_val": false,
+    "exclude_tiny_support": true
+  },
+  "model": {
+    "backbone_name": "dinov2-small",
+    "patch_size": 14,
+    "embedding_dim": 512,
+    "dropout": 0.1,
+    "unfreeze_last_blocks": 0
+  },
+  "retrieval": {
+    "prototype_top_k": 3
+  },
+  "p1a": {
+    "epochs": 30,
+    "classes_per_batch": 4,
+    "instances_per_class": 4,
+    "head_lr": 0.0001,
+    "min_lr": 0.0000001,
+    "weight_decay": 0.01,
+    "gradient_clip": 5.0,
+    "label_smoothing": 0.1,
+    "id_weight": 1.0,
+    "triplet_weight": 1.0,
+    "triplet_margin": 0.3
+  },
+  "b1": {},
+  "b2": {}
+}

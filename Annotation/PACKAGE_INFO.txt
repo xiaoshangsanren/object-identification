@@ -1,0 +1,21 @@
+PACKAGE_NAME=Annotation_Windows
+PACKAGE_VERSION=20260803-v2
+GENERATED_AT=2026-08-03T13:00:00+08:00
+RUNTIME=CPython 3.11 x64 portable
+PYTORCH=2.7.1+cu118
+TORCHVISION=0.22.1+cu118
+CUDA_RUNTIME=11.8 bundled with PyTorch
+PLATFORM=Windows x86_64/amd64
+DEFAULT_GPU_ID=0
+DEFAULT_PORT=7860
+ALGORITHMS=CLIP,clip_gallery_temporal,dino_gallery_temporal,text_grounding_temporal
+GALLERY_CLASS_COUNT=10
+DELIVERY_SCOPE=portable Python,application,models,clip_gallery,Test_Video.mp4,Test_1.mp4,Test_2.mp4,Test_3.mp4,IS-2.webp,FFmpeg,7-Zip,VC++ redistributable,writable output directories
+TEST_VIDEOS=Test_Video.mp4,Test_1.mp4,Test_2.mp4,Test_3.mp4
+EXCLUDED_SCOPE=Resource/train_data,Resource/clip_gallery/evaluation,historical_outputs,build_cache,pip wheel cache
+HOST_REQUIREMENTS=64-bit Windows; compatible NVIDIA Windows driver; browser
+START_LOCAL_URL=http://127.0.0.1:7860/
+
+本包不使用Docker或WSL2，不要求安装系统Python或CUDA Toolkit。YOLO、CLIP、DINOv2和Grounding DINO模型均已随包提供，运行时强制使用离线模式。
+便携PyTorch采用CUDA 11.8构建，以覆盖较广的Windows NVIDIA驱动环境；环境检查要求驱动版本不低于452.39，并实际执行CUDA张量、四类模型、NVENC及RAR后端验证。
+Resource/train_data和Gallery评价标注不进入交付包；网页训练功能保留，可在运行时上传数据。
