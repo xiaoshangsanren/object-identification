@@ -50,6 +50,6 @@ Letterbox在保留完整车身的同时，会让细长车辆在 `224 x 224` 画�
 
 ## 输出位置
 
-- 汇总：`PAD_Lite/outputs/dino_letterbox_text_anchor/dino/b2/summary.json`
-- 每折指标：`PAD_Lite/outputs/dino_letterbox_text_anchor/dino/b2/fold_*/metrics.json`
+- 汇总：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_text_anchor/dino/b2/summary.json`
+- 每折指标：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_text_anchor/dino/b2/fold_*/metrics.json`
 - 训练日志：`PAD_Lite/logs/dino_letterbox_text_anchor/`

@@ -58,10 +58,10 @@
 
 ## 输出位置
 
-- 224：`PAD_Lite/outputs/dino_text_anchor_backbone_sweep/unfreeze_00/dino/b2/`
-- 336：`PAD_Lite/outputs/dino_center_crop_text_anchor_336/dino/b2/`
-- 448：`PAD_Lite/outputs/dino_center_crop_text_anchor_448/dino/b2/`
-- 518：`PAD_Lite/outputs/dino_center_crop_text_anchor_518/dino/b2/`
+- 224：`PAD_Lite/outputs/01_baseline_and_finetuning/dino_text_anchor_backbone_sweep/unfreeze_00/dino/b2/`
+- 336：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_center_crop_text_anchor_336/dino/b2/`
+- 448：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_center_crop_text_anchor_448/dino/b2/`
+- 518：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_center_crop_text_anchor_518/dino/b2/`
 - 日志：`PAD_Lite/logs/dino_center_crop_text_anchor_resolution_sweep/`
 
 所有 20 个折次均通过以下结果检查：每折存在 `metrics.json`，训练历史为 30 轮，模型为 DINOv2-small B2，主干解冻数为 0，损失权重为 `1.0 / 1.0 / 0.5`。本次新增的 15 个折次日志未发现 Traceback、CUDA OOM 或 NaN。

@@ -6,7 +6,7 @@
     "image_root": "../datasets/Russian-Military-Vehicles/train",
     "yolo_model": "Resource/models/yolo/yolo26n.pt",
     "detr_model": "Resource/models/detr-resnet-50",
-    "output_root": "PAD_Lite/outputs/detector_zero_shot"
+    "output_root": "PAD_Lite/outputs/05_detector_yolo_detr/detector_zero_shot"
   },
   "evaluation": {
     "candidate_class_names": [
@@ -18,6 +18,8 @@
     "yolo_image_size": 640,
     "ap_score_floor": 0.001,
     "operating_score_threshold": 0.3,
+    "target_coverage_threshold": 0.9,
+    "crop_purity_threshold": 0.5,
     "iou_thresholds": [
       0.5,
       0.55,

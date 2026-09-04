@@ -16,9 +16,17 @@ from .dino_cli import DEFAULT_CONFIG
 from .dino_engine import run_dino_training_fold
 
 
-DEFAULT_B1_OUTPUT_ROOT = PAD_LITE_ROOT / "outputs" / "dino_backbone_sweep"
+DEFAULT_B1_OUTPUT_ROOT = (
+    PAD_LITE_ROOT
+    / "outputs"
+    / "01_baseline_and_finetuning"
+    / "dino_backbone_sweep"
+)
 DEFAULT_B2_OUTPUT_ROOT = (
-    PAD_LITE_ROOT / "outputs" / "dino_text_anchor_backbone_sweep"
+    PAD_LITE_ROOT
+    / "outputs"
+    / "01_baseline_and_finetuning"
+    / "dino_text_anchor_backbone_sweep"
 )
 
 

@@ -5,7 +5,7 @@
     "splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_v1",
     "clip_model": "Resource/models/clip-vit-base-patch32",
     "dino_model": "Resource/models/dinov2-small",
-    "output_root": "PAD_Lite/outputs/dino_patch_safe_letterbox_336/p1a_patch_average_only"
+    "output_root": "PAD_Lite/outputs/03_p2b_patch_reranking/dino_patch_safe_letterbox_336/p1a_patch_average_only"
   },
   "data": {
     "input_mode": "letterbox",

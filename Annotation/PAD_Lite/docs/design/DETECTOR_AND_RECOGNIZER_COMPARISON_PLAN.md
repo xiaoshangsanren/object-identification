@@ -46,14 +46,19 @@ car, motorcycle, bus, truck
 
 YOLO沿用当前640输入；DETR沿用本地模型自带的默认预处理。因而本阶段回答的是“保持各自开箱设置时，DETR能否直接替换当前YOLO”，不是严格的相同计算量比较。
 
-默认运行点置信度为0.30；计算AP时从0.001开始保留预测。指标包括：
+默认运行点置信度为0.30；计算AP时从0.001开始保留预测。阶段1首先评价车辆是否
+被找全以及裁剪框是否可用于后续细粒度识别：
 
-- AP50、AP75、mAP50:95；
-- 置信度0.30下的Precision、Recall、F1；
-- 每图误检数；
-- 小目标Recall；
-- 按原始车型统计的Recall；
-- 单图推理耗时。
+- 对象Recall@IoU50与Recall@IoU75；
+- 一张图内全部XML车辆都匹配成功的整图找全率；
+- 正确匹配框的IoU均值、中位数和P10；
+- 车辆目标覆盖率与裁剪纯净度；
+- IoU不低于0.50且车辆覆盖率不低于90%的完整裁剪Recall；
+- 一张图内全部车辆都满足完整裁剪要求的整图完整裁剪率；
+- 小目标Recall和逐原始车型Recall。
+
+Precision、每图误检数、平均候选裁剪数、AP50/AP75/mAP50:95及单图耗时作为辅助
+指标，用于衡量后续P2B负担、标准检测质量和运行效率。
 
 先运行CPU冒烟验证：
 
@@ -70,7 +75,7 @@ bash Annotation/PAD_Lite/scripts/Run_Experiment1_Stage1_ZeroShot.sh 4
 脚本要求该卡至少有8000 MiB空闲显存，不满足时直接退出而不会抢占现有任务。GPU参数可换成任意空闲卡号。结果保存到：
 
 ```text
-Annotation/PAD_Lite/outputs/detector_zero_shot/full_<UTC时间>/
+Annotation/PAD_Lite/outputs/05_detector_yolo_detr/detector_zero_shot/full_<UTC时间>/
 ```
 
 ### 2.2 第二阶段：相同数据的领域微调
@@ -112,9 +117,9 @@ bash Annotation/PAD_Lite/scripts/Run_Experiment1_Stage2_FineTune.sh 4 6
 bash Annotation/PAD_Lite/scripts/Run_Experiment1_Stage2_FineTune.sh 4 6 20260820T010000Z
 ```
 
-结果位于 `PAD_Lite/outputs/detector_finetune/<Run ID>/`。阶段2不能与阶段1混写结论：阶段1比较开箱即用能力，阶段2比较相同领域监督后的能力。
+结果位于 `PAD_Lite/outputs/05_detector_yolo_detr/detector_finetune/<Run ID>/`。阶段2不能与阶段1混写结论：阶段1比较开箱即用能力，阶段2比较相同领域监督后的能力。
 
-## 3. 实验2：P2B vs ConvNeXt-Tiny
+## 3. 实验2：原始DINO / P2B / 原始ConvNeXt-Tiny
 
 ### 3.1 数据边界
 
@@ -126,39 +131,34 @@ datasets/processed/russian_pad/
 
 这些目标图由XML真实框生成，不使用YOLO或DETR预测框，因此实验2测到的是识别器本身的能力上限。任何来自同一原图的多个crop必须始终处于同一个Train、Validation、Gallery或Query分区，禁止源图泄漏。
 
-### 3.2 主协议
+### 3.2 当前执行协议（2026-08-20修订）
 
-主实验采用10类已知车型的图像级五折检索：
+本轮实验只比较三个现成方案的实际检索性能，不训练ConvNeXt-Tiny：
 
-- Train：训练特征模型；
-- Validation：早停和选择设置；
-- Gallery：不参与梯度，用于构建10类参考特征；
-- Query：只进行最终Rank-1评估。
+- 原始DINOv2-Small：原始预训练权重、全冻结、零训练，使用CLS特征；
+- 原始ConvNeXt-Tiny：原始ImageNet预训练权重、全冻结、零训练，使用全局池化特征；
+- P2B：复用已有训练结果和固定CLS/Weighted-Patch融合，不在本轮重新训练。
 
-现有“3折训练、2折测试、4-way未见类”协议保留为补充压力测试，不替代10类主结果。
+三者使用现有`pad_lite_splits_v1`中完全相同的五折`novel_support`作为Gallery、
+`novel_query`作为Query，采用相同的Top-3类别原型余弦检索。每折包含两个测试车型，
+五折覆盖全部10个车型；逐折Query样本ID必须一致。
 
-### 3.3 两层比较
+原始DINO与原始ConvNeXt统一使用224 CenterCrop；P2B保留其既有336 Letterbox输入。
+因此本轮结论只表示三个可直接使用方案的性能差异，不能解释为纯backbone公平性结论。
 
-系统级比较：
-
-```text
-当前完整P2B（DINOv2 + CLS候选 + Patch Scorer + rerank）
-vs
-ConvNeXt-Tiny + Projection + BNNeck + Gallery retrieval
-```
-
-该结果比较完整方案，不能解释为纯backbone优劣。
-
-如果需要隔离backbone差异，再增加受控比较：
+### 3.3 两个结果视角
 
 ```text
-DINOv2 + Global Pool + 相同Retrieval Head
-ConvNeXt-Tiny + Global Pool + 相同Retrieval Head
+实验2A：原始DINOv2-Small vs 原始ConvNeXt-Tiny
+实验2B：已有P2B vs 原始ConvNeXt-Tiny
 ```
 
-两者统一336 Letterbox、512维embedding、ID Loss、Batch-Hard Triplet、Gallery原型和余弦相似度。
+实验2A比较两个未进行领域训练的原始视觉特征；实验2B比较当前P2B完整方案与原始
+ConvNeXt基线。两个结果共享同一次ConvNeXt冻结评测，不额外训练检索头、Projection或
+BNNeck。
 
-主要指标：每折Rank-1、平均Rank-1、Macro Rank-1、Micro Rank-1、逐车型Rank-1、耗时和显存。
+主要指标：每折Rank-1、Macro Rank-1、Micro Rank-1、逐车型Rank-1、retrieval mAP和冻结
+特征提取耗时。所有结果必须明确记录`training_performed=false`和可训练参数量为0。
 
 ## 4. 后续端到端确认
 

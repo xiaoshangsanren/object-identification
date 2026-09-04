@@ -20,7 +20,12 @@ from .experiment_registry import (
 )
 
 
-DEFAULT_RUNS_ROOT = PAD_LITE_ROOT / "outputs" / "experiment_runs"
+DEFAULT_RUNS_ROOT = (
+    PAD_LITE_ROOT
+    / "outputs"
+    / "03_p2b_patch_reranking"
+    / "experiment_runs"
+)
 RUN_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 

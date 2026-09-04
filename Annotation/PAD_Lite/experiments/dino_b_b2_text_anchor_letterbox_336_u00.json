@@ -7,6 +7,6 @@
   "description": "DINOv2-Base B2 Letterbox 336 with training-only text anchor and frozen visual backbone.",
   "text_anchor": true,
   "overrides": {},
-  "legacy_output_root": "PAD_Lite/outputs/dino_base_letterbox_text_anchor_336",
+  "legacy_output_root": "PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_base_letterbox_text_anchor_336",
   "tags": ["dino-base", "b2", "text-anchor", "letterbox", "336"]
 }

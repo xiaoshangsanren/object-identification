@@ -690,7 +690,7 @@ PAD_Lite/
 输出必须独立保存：
 
 ```text
-PAD_Lite/outputs/dino_patch_safe_letterbox_336/
+PAD_Lite/outputs/03_p2b_patch_reranking/dino_patch_safe_letterbox_336/
 ├── p1a_patch_average_only/
 ├── p1b_cls_patch_average/
 ├── p2a_weighted_patch_only/
@@ -703,7 +703,7 @@ PAD_Lite/outputs/dino_patch_safe_letterbox_336/
 不得覆盖：
 
 ```text
-PAD_Lite/outputs/dino_letterbox_text_anchor_336/
+PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_text_anchor_336/
 ```
 
 ---

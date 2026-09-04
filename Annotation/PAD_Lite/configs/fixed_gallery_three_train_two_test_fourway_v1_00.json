@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "name": "fixed_gallery_three_train_two_test_fourway_v1_00",
+  "seed": 2026,
+  "paths": {
+    "crop_root": "../datasets/processed/russian_pad",
+    "episode_splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_3train_2test_4way_v1",
+    "fixed_gallery_manifest": "../datasets/processed/russian_pad/fixed_gallery_semantic_balanced_v1.json",
+    "dino_model": "Resource/models/dinov2-small",
+    "convnext_model": "Resource/models/convnext-tiny-224",
+    "dino_protocol_config": "PAD_Lite/configs/p2b_three_train_two_test_4way.json"
+  },
+  "protocol": {
+    "source_fold_count": 5,
+    "train_fold_count": 3,
+    "test_fold_count": 2,
+    "episode_count": 10,
+    "base_class_count": 6,
+    "novel_class_count": 4,
+    "gallery_per_class": 10,
+    "prototype_top_k": 3,
+    "fixed_gallery_manifest_sha256": "f34faae4c5c48178dcb5714c963bc76dcbd8ab0cf886cd5d34d768df6e374d39"
+  },
+  "raw": {
+    "image_size": 224,
+    "resize_short_edge": 256,
+    "eval_batch_size": 64,
+    "workers": 4,
+    "amp": true,
+    "exclude_tiny_support": true
+  },
+  "convnext_p2b": {
+    "image_size": 320,
+    "patch_stride": 32,
+    "embedding_dim": 512,
+    "dropout": 0.1,
+    "epochs": 30,
+    "classes_per_batch": 4,
+    "instances_per_class": 4,
+    "head_lr": 0.0001,
+    "min_lr": 0.0000001,
+    "weight_decay": 0.01,
+    "gradient_clip": 5.0,
+    "label_smoothing": 0.1,
+    "id_weight": 1.0,
+    "triplet_weight": 1.0,
+    "triplet_margin": 0.3,
+    "eval_batch_size": 32,
+    "workers": 4,
+    "amp": true,
+    "exclude_tiny_train": true,
+    "exclude_tiny_val": false,
+    "exclude_tiny_support": true,
+    "cls_weight": 0.5,
+    "patch_weight": 0.5
+  }
+}

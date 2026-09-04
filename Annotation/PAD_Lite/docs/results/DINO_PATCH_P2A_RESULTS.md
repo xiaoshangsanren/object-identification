@@ -157,4 +157,4 @@ BMP-2：净纠错 -8
 - 配置：`configs/dino_patch_p2a_weighted_letterbox_336.json`
 - 预设：`experiments/dino_s_p2a_weighted_patch_letterbox_336.json`
 - 测试：`PAD_Lite/tests/test_dino_patch_p2a.py`
-- Managed Run：`outputs/experiment_runs/dino_s_p2a_weighted_patch_letterbox_336/fivefold_seed2026_v1/`
+- Managed Run：`outputs/03_p2b_patch_reranking/experiment_runs/dino_s_p2a_weighted_patch_letterbox_336/fivefold_seed2026_v1/`

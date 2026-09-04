@@ -51,9 +51,9 @@
 
 ## 输出位置
 
-- 无文本224：`PAD_Lite/outputs/dino_letterbox_no_text_224/dino/b1/`
-- 无文本336：`PAD_Lite/outputs/dino_letterbox_no_text_336/dino/b1/`
-- 无文本448：`PAD_Lite/outputs/dino_letterbox_no_text_448/dino/b1/`
-- 无文本518：`PAD_Lite/outputs/dino_letterbox_no_text_518/dino/b1/`
+- 无文本224：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_no_text_224/dino/b1/`
+- 无文本336：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_no_text_336/dino/b1/`
+- 无文本448：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_no_text_448/dino/b1/`
+- 无文本518：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_no_text_518/dino/b1/`
 - 无文本日志：`PAD_Lite/logs/dino_letterbox_no_text_resolution_sweep/`
 - 带文本原实验：`PAD_Lite/docs/results/DINO_LETTERBOX_RESOLUTION_SWEEP_RESULTS.md`

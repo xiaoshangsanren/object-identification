@@ -7,6 +7,6 @@
   "description": "P1a masked Patch Average only, DINOv2-Small Letterbox 336, without text anchor.",
   "text_anchor": false,
   "overrides": {},
-  "legacy_output_root": "PAD_Lite/outputs/dino_patch_safe_letterbox_336/p1a_patch_average_only",
+  "legacy_output_root": "PAD_Lite/outputs/03_p2b_patch_reranking/dino_patch_safe_letterbox_336/p1a_patch_average_only",
   "tags": ["dino-small", "p1a", "patch-average", "letterbox", "no-text"]
 }

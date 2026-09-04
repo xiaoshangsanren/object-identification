@@ -83,7 +83,7 @@ P2b的宏平均Recall@2为 **94.42%**，Recall@3为 **98.28%**。这说明多数
 
 代码：`PAD_Lite/src/p2b_three_two_protocol.py`
 
-结果：`outputs/p2b_three_train_two_test_4way_v1/`
+结果：`outputs/03_p2b_patch_reranking/p2b_three_train_two_test_4way_v1/`
 
 ```bash
 python -m PAD_Lite.p2b_three_two_protocol build-splits

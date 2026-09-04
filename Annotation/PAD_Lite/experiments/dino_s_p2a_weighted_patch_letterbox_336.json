@@ -7,6 +7,6 @@
   "description": "P2a dynamic content-weighted masked Patch-only retrieval with frozen DINOv2-Small at Letterbox 336.",
   "text_anchor": false,
   "overrides": {},
-  "legacy_output_root": "PAD_Lite/outputs/dino_patch_safe_letterbox_336/p2a_weighted_patch_only",
+  "legacy_output_root": "PAD_Lite/outputs/03_p2b_patch_reranking/dino_patch_safe_letterbox_336/p2a_weighted_patch_only",
   "tags": ["dino-small", "p2a", "weighted-patch", "patch-only", "letterbox", "no-text"]
 }

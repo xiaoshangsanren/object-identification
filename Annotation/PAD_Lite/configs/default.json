@@ -4,7 +4,7 @@
     "crop_root": "../datasets/processed/russian_pad",
     "splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_v1",
     "clip_model": "Resource/models/clip-vit-base-patch32",
-    "output_root": "PAD_Lite/outputs"
+    "output_root": "PAD_Lite/outputs/01_baseline_and_finetuning"
   },
   "data": {
     "image_size": 224,
@@ -66,4 +66,3 @@
     }
   }
 }
-

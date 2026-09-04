@@ -11,6 +11,6 @@
     "data.eval_batch_size": 64,
     "model.unfreeze_last_blocks": 0
   },
-  "legacy_output_root": "PAD_Lite/outputs/dino_letterbox_no_text_224",
+  "legacy_output_root": "PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_no_text_224",
   "tags": ["dino-small", "b1", "no-text", "letterbox", "resolution"]
 }

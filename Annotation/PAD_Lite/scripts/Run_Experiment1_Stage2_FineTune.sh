@@ -6,7 +6,7 @@ annotation_root="$(cd "${script_dir}/../.." && pwd)"
 yolo_gpu="${1:-4}"
 detr_gpu="${2:-6}"
 run_id="${3:-$(date -u +%Y%m%dT%H%M%SZ)}"
-run_root="${annotation_root}/PAD_Lite/outputs/detector_finetune/${run_id}"
+run_root="${annotation_root}/PAD_Lite/outputs/05_detector_yolo_detr/detector_finetune/${run_id}"
 
 if [[ "${yolo_gpu}" == "${detr_gpu}" ]]; then
   echo "Stage 2 runs YOLO and DETR concurrently; choose two different GPU indices." >&2

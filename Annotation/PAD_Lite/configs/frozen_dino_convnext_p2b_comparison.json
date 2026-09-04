@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "name": "frozen_dino_convnext_p2b_fivefold",
+  "seed": 2026,
+  "paths": {
+    "crop_root": "../datasets/processed/russian_pad",
+    "splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_v1",
+    "dino_model": "Resource/models/dinov2-small",
+    "convnext_model": "Resource/models/convnext-tiny-224",
+    "p2b_results_root": "PAD_Lite/outputs/03_p2b_patch_reranking/experiment_runs/dino_s_p2b_cls_weighted_patch_equal_fusion_336/fivefold_equal_v1",
+    "output_root": "PAD_Lite/outputs/04_gallery_and_recognizer_evaluation/frozen_dino_convnext_p2b_comparison"
+  },
+  "data": {
+    "fold_count": 5,
+    "image_size": 224,
+    "resize_short_edge": 256,
+    "eval_batch_size": 64,
+    "workers": 4,
+    "amp": true,
+    "exclude_tiny_support": true
+  },
+  "retrieval": {
+    "prototype_top_k": 3
+  }
+}

@@ -6,7 +6,7 @@
   "description": "DINOv2-Small B1 CenterCrop 224 without text anchor; unfreeze last {value} blocks.",
   "text_anchor": false,
   "overrides": {},
-  "legacy_output_root": "PAD_Lite/outputs/dino_backbone_sweep/unfreeze_{value:02d}",
+  "legacy_output_root": "PAD_Lite/outputs/01_baseline_and_finetuning/dino_backbone_sweep/unfreeze_{value:02d}",
   "tags": ["dino-small", "b1", "no-text", "center-crop", "id", "triplet", "unfreeze-sweep"],
   "matrix": {
     "field": "model.unfreeze_last_blocks",

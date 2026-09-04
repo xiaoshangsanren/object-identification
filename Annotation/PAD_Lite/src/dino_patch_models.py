@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -34,6 +36,93 @@ def masked_average_patch_tokens(
     if torch.any(counts == 0):
         raise ValueError("Every image must contain at least one valid patch")
     return (patch_tokens * mask.unsqueeze(-1)).sum(dim=1) / counts
+
+
+class FrozenVisualHeads(nn.Module):
+    """
+    方法作用：
+        从缓存的DINOv2-Small CLS/Patch Token重放既有B2、P2A和P2B检索头。
+        本类只用于P2B评测和部署复用，所有参数始终冻结。
+    输入参数：
+        b2_state、p2a_state：旧checkpoint的model_state；hidden_dim：DINO通道数；
+        embedding_dim：每个检索分支的输出维度。
+    返回值：
+        FrozenVisualHeads：输入CLS [B,384]、Patch [B,N,384]和Mask [B,N]，
+        输出B2 [B,512]、P2A [B,512]、P2B [B,1024]和Patch权重 [B,N]。
+    """
+
+    def __init__(
+        self,
+        b2_state: dict[str, torch.Tensor],
+        p2a_state: dict[str, torch.Tensor],
+        hidden_dim: int = 384,
+        embedding_dim: int = 512,
+    ) -> None:
+        super().__init__()
+        self.b2_projection = nn.Linear(hidden_dim, embedding_dim, bias=False)
+        self.b2_bnneck = nn.BatchNorm1d(embedding_dim)
+        self.p2a_projection = nn.Linear(hidden_dim, embedding_dim, bias=False)
+        self.p2a_bnneck = nn.BatchNorm1d(embedding_dim)
+        self.patch_scorer = nn.Linear(hidden_dim, 1, bias=True)
+        self._load_branch("b2", b2_state)
+        self._load_branch("p2a", p2a_state)
+        for parameter in self.parameters():
+            parameter.requires_grad_(False)
+        self.eval()
+
+    def _load_branch(
+        self,
+        branch: str,
+        state: dict[str, torch.Tensor],
+    ) -> None:
+        """
+        方法作用：载入B2或P2A的Projection、BNNeck和可选Patch Scorer。
+        输入参数：branch为b2或p2a；state为旧checkpoint参数字典。
+        返回值：None。
+        """
+        projection = getattr(self, f"{branch}_projection")
+        bnneck = getattr(self, f"{branch}_bnneck")
+        projection.load_state_dict({"weight": state["projection.weight"]}, strict=True)
+        bnneck.load_state_dict(
+            {
+                key.removeprefix("bnneck."): value
+                for key, value in state.items()
+                if key.startswith("bnneck.")
+            },
+            strict=True,
+        )
+        if branch == "p2a":
+            self.patch_scorer.load_state_dict(
+                {
+                    "weight": state["patch_scorer.weight"],
+                    "bias": state["patch_scorer.bias"],
+                },
+                strict=True,
+            )
+
+    @torch.inference_mode()
+    def encode(
+        self,
+        cls_tokens: torch.Tensor,
+        patch_tokens: torch.Tensor,
+        valid_patch_masks: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        方法作用：用既有B2/P2A参数编码Token并执行P2B的50/50融合。
+        输入参数：CLS [B,384]；Patch [B,N,384]；有效掩码 [B,N]。
+        返回值：B2 [B,512]、P2A [B,512]、P2B [B,1024]、权重 [B,N]。
+        """
+        cls_tokens = cls_tokens.float()
+        patch_tokens = patch_tokens.float()
+        masks = valid_patch_masks.bool()
+        b2 = F.normalize(self.b2_bnneck(self.b2_projection(cls_tokens)), dim=-1)
+        scores = self.patch_scorer(patch_tokens).squeeze(-1)
+        scores = scores.masked_fill(~masks, float("-inf"))
+        weights = torch.softmax(scores, dim=-1).masked_fill(~masks, 0.0)
+        pooled = (weights.unsqueeze(-1) * patch_tokens).sum(dim=1)
+        p2a = F.normalize(self.p2a_bnneck(self.p2a_projection(pooled)), dim=-1)
+        p2b = torch.cat((math.sqrt(0.5) * b2, math.sqrt(0.5) * p2a), dim=-1)
+        return b2, p2a, F.normalize(p2b, dim=-1), weights
 
 
 class DinoMaskedPatchAverageModel(nn.Module):

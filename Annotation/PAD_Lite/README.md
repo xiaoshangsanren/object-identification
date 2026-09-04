@@ -22,6 +22,10 @@ PAD_Lite/
 
 根目录的 `__init__.py` 和 `__main__.py` 仅用于兼容原有命令；实际实现统一位于 `src/`。因此现有 `python -m PAD_Lite...` 命令不需要改变。
 
+## 当前代码边界
+
+当前可执行代码保留到纯视觉 P2B 实验及其既有训练、评测工具。P2B之后新增的外部知识库、图文知识重排、where文本定位、知识MIL和知识BBox实验代码已移除；对应历史输出与研究报告仅作归档。B2的训练期文本锚点属于P2B基线组成，继续保留，推理阶段仍为纯视觉输入。
+
 ## YOLO / DETR 零样本检测对比
 
 使用 Russian-Military-Vehicles 原始整图和 XML，只评估当前通用预训练权重，不进行训练：
@@ -172,7 +176,7 @@ CUDA_VISIBLE_DEVICES=6 python -m PAD_Lite.dino_cli b2 --fold all --device cuda:0
 
 DINO-B0 使用冻结 DINOv2；DINO-B1 解冻最后 2 个 Block 并使用 ID + Triplet；DINO-B2 在训练阶段额外使用冻结 CLIP 文本编码器和不含车型名的可学习文本锚点，推理仍为纯视觉。
 
-其独立配置为 `configs/dino_default.json`，输出位于 `outputs/dino/`，不会覆盖原 CLIP 结果。完整指标和对比结论见 `docs/results/DINO_FIVEFOLD_RESULTS.md`。
+其独立配置为 `configs/dino_default.json`，输出位于 `outputs/01_baseline_and_finetuning/dino/`，不会覆盖原 CLIP 结果。完整指标和对比结论见 `docs/results/DINO_FIVEFOLD_RESULTS.md`。
 
 ## CLIP Backbone 解冻深度消融
 
@@ -189,7 +193,7 @@ python -m PAD_Lite b1 --unfreeze-last-blocks 2 --output-root PAD_Lite/outputs/ex
 python -m PAD_Lite.clip_backbone_sweep --blocks all --fold all --device cuda:0 --resume
 ```
 
-也可以用 `--blocks 0,1,2` 或 `--blocks 0-6` 运行子集。该实验固定使用 B1 的 ID Loss + Batch-Hard Triplet Loss，只汇总 `rank1_all`；默认在每折评测后删除临时训练检查点以节省磁盘。结果位于 `outputs/clip_backbone_sweep/RANK1_RESULTS.md`。
+也可以用 `--blocks 0,1,2` 或 `--blocks 0-6` 运行子集。该实验固定使用 B1 的 ID Loss + Batch-Hard Triplet Loss，只汇总 `rank1_all`；默认在每折评测后删除临时训练检查点以节省磁盘。结果位于 `outputs/01_baseline_and_finetuning/clip_backbone_sweep/RANK1_RESULTS.md`。
 
 DINOv2-small 支持同样的参数和消融入口：
 
@@ -198,7 +202,7 @@ python -m PAD_Lite.dino_cli b1 --unfreeze-last-blocks 0 --output-root PAD_Lite/o
 python -m PAD_Lite.dino_backbone_sweep --blocks all --fold all --device cuda:0 --resume
 ```
 
-DINOv2 消融结果位于 `outputs/dino_backbone_sweep/RANK1_RESULTS.md`，同样只汇总 `rank1_all`。
+DINOv2 消融结果位于 `outputs/01_baseline_and_finetuning/dino_backbone_sweep/RANK1_RESULTS.md`，同样只汇总 `rank1_all`。
 
 ### DINOv2 Letterbox + 文本锚点实验
 
@@ -220,7 +224,7 @@ python -m PAD_Lite.dino_cli b2 \
   --config PAD_Lite/configs/dino_letterbox_text_anchor.json \
   --image-size 448 \
   --eval-batch-size 16 \
-  --output-root PAD_Lite/outputs/dino_letterbox_text_anchor_448 \
+  --output-root PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_text_anchor_448 \
   --fold all \
   --device cuda:0
 ```
@@ -234,7 +238,7 @@ python -m PAD_Lite.dino_cli b1 \
   --config PAD_Lite/configs/dino_letterbox_no_text.json \
   --image-size 448 \
   --eval-batch-size 16 \
-  --output-root PAD_Lite/outputs/dino_letterbox_no_text_448 \
+  --output-root PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_no_text_448 \
   --fold all \
   --device cuda:0
 ```
@@ -249,7 +253,7 @@ python -m PAD_Lite.dino_cli b2 \
   --image-size 448 \
   --resize-short-edge 512 \
   --eval-batch-size 16 \
-  --output-root PAD_Lite/outputs/dino_center_crop_text_anchor_448 \
+  --output-root PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_center_crop_text_anchor_448 \
   --fold all \
   --device cuda:0
 ```
@@ -353,7 +357,7 @@ python -m PAD_Lite.export_class_attention_heatmaps --class-name t-72
 python -m PAD_Lite.dino_backbone_sweep --variant b2 --blocks all --fold all --device cuda:0 --resume
 ```
 
-其结果位于 `outputs/dino_text_anchor_backbone_sweep/`；`RANK1_RESULTS.md` 是逐折结果，`TEXT_ANCHOR_EFFECT.md` 是相同解冻层数下 B2 相对无文本 B1 的 Rank-1 净变化。
+其结果位于 `outputs/01_baseline_and_finetuning/dino_text_anchor_backbone_sweep/`；`RANK1_RESULTS.md` 是逐折结果，`TEXT_ANCHOR_EFFECT.md` 是相同解冻层数下 B2 相对无文本 B1 的 Rank-1 净变化。
 
 环境复现文件：
 
@@ -414,8 +418,8 @@ CUDA_VISIBLE_DEVICES=6 python -m PAD_Lite.final_train b2 --device cuda:0 --resum
 输出为：
 
 ```text
-PAD_Lite/outputs/final/b1/final.pt
-PAD_Lite/outputs/final/b2/final.pt
+PAD_Lite/outputs/01_baseline_and_finetuning/final/b1/final.pt
+PAD_Lite/outputs/01_baseline_and_finetuning/final/b2/final.pt
 ```
 
 B0保持原始冻结CLIP，不产生训练权重。完整Annotation流程新增三个Gallery识别后端：`pad_lite_b0`、`pad_lite_b1`、`pad_lite_b2`。三者仍使用YOLO产生候选框，区别只在候选裁剪的视觉编码器；B2推理阶段不加载文本Prompt。
@@ -429,4 +433,4 @@ python -m PAD_Lite.evaluate_gallery_10class b1 --device cuda:0
 python -m PAD_Lite.evaluate_gallery_10class b2 --device cuda:0
 ```
 
-原始`Resource/clip_gallery`不会被修改。Support Gallery位于`Resource/clip_gallery_eval_10class_v1`，Test与固定划分清单位于`PAD_Lite/evaluation_data/gallery_10class_eval_v1`，结果位于`PAD_Lite/outputs/gallery_10class`。
+原始`Resource/clip_gallery`不会被修改。Support Gallery位于`Resource/clip_gallery_eval_10class_v1`，Test与固定划分清单位于`PAD_Lite/evaluation_data/gallery_10class_eval_v1`，结果位于`PAD_Lite/outputs/04_gallery_and_recognizer_evaluation/gallery_10class`。

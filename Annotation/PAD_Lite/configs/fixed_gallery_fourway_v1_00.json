@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "name": "fixed_gallery_fourway_v1_00",
+  "seed": 2026,
+  "paths": {
+    "crop_root": "../datasets/processed/russian_pad",
+    "splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_v1",
+    "fixed_gallery_manifest": "../datasets/processed/russian_pad/fixed_gallery_semantic_balanced_v1.json",
+    "dino_model": "Resource/models/dinov2-small",
+    "clip_model": "Resource/models/clip-vit-base-patch32",
+    "convnext_model": "Resource/models/convnext-tiny-224",
+    "dino_b2_checkpoint_root": "PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_text_anchor_336/dino/b2",
+    "dino_p2a_checkpoint_root": "PAD_Lite/outputs/03_p2b_patch_reranking/experiment_runs/dino_s_p2a_weighted_patch_letterbox_336/fivefold_seed2026_v1"
+  },
+  "protocol": {
+    "fold_count": 5,
+    "gallery_per_class": 10,
+    "fixed_gallery_manifest_sha256": "f34faae4c5c48178dcb5714c963bc76dcbd8ab0cf886cd5d34d768df6e374d39",
+    "prototype_top_k": 3
+  },
+  "raw": {
+    "image_size": 224,
+    "resize_short_edge": 256,
+    "eval_batch_size": 64,
+    "workers": 4,
+    "amp": true,
+    "exclude_tiny_support": true
+  },
+  "dino_p2b": {
+    "image_size": 336,
+    "resize_short_edge": 384,
+    "eval_batch_size": 32,
+    "workers": 4,
+    "amp": true,
+    "cls_weight": 0.5,
+    "patch_weight": 0.5
+  },
+  "convnext_p2b": {
+    "image_size": 320,
+    "patch_stride": 32,
+    "embedding_dim": 512,
+    "dropout": 0.1,
+    "epochs": 30,
+    "classes_per_batch": 4,
+    "instances_per_class": 4,
+    "head_lr": 0.0001,
+    "min_lr": 0.0000001,
+    "weight_decay": 0.01,
+    "gradient_clip": 5.0,
+    "label_smoothing": 0.1,
+    "id_weight": 1.0,
+    "triplet_weight": 1.0,
+    "triplet_margin": 0.3,
+    "eval_batch_size": 32,
+    "workers": 4,
+    "amp": true,
+    "exclude_tiny_train": true,
+    "exclude_tiny_val": false,
+    "exclude_tiny_support": true,
+    "cls_weight": 0.5,
+    "patch_weight": 0.5
+  }
+}

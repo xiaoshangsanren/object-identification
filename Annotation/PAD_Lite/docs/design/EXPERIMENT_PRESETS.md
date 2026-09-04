@@ -71,7 +71,7 @@ python -m PAD_Lite.experiment_cli run \
 不传 `--run-id` 时，程序自动生成 UTC 时间戳作为 Run ID：
 
 ```text
-PAD_Lite/outputs/experiment_runs/<实验名>/<UTC时间戳>/
+PAD_Lite/outputs/03_p2b_patch_reranking/experiment_runs/<实验名>/<UTC时间戳>/
 ```
 
 也可以指定便于识别的 Run ID：

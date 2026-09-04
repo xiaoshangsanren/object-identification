@@ -14,7 +14,12 @@ from .config import ANNOTATION_ROOT, PAD_LITE_ROOT, load_config
 from .engine import run_training_fold
 
 
-DEFAULT_OUTPUT_ROOT = PAD_LITE_ROOT / "outputs" / "clip_backbone_sweep"
+DEFAULT_OUTPUT_ROOT = (
+    PAD_LITE_ROOT
+    / "outputs"
+    / "01_baseline_and_finetuning"
+    / "clip_backbone_sweep"
+)
 
 
 def parse_blocks(value: str) -> list[int]:

@@ -55,7 +55,7 @@ Base 相对 Small 的逐折变化：
 
 - 配置：`PAD_Lite/configs/dino_base_letterbox_text_anchor_336.json`
 - Base 模型：`Resource/models/dinov2-base/`
-- 五折输出：`PAD_Lite/outputs/dino_base_letterbox_text_anchor_336/dino/b2/`
+- 五折输出：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_base_letterbox_text_anchor_336/dino/b2/`
 - 日志：`PAD_Lite/logs/dino_base_letterbox_text_anchor_336/`
 
 五折均存在 `metrics.json` 和 30 轮 `history.json`；结果与运行配置均记录为 `dinov2-base`，主干解冻参数量为 0，日志未发现 Traceback、CUDA OOM 或 NaN。

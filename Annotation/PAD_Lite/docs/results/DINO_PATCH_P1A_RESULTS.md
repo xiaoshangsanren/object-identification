@@ -143,5 +143,5 @@ Fold 2/4相关性相对较低，也支持局部表示与CLS存在一定互补性
 - CLI：`PAD_Lite/src/dino_patch_cli.py`
 - 配置：`configs/dino_patch_safe_letterbox_336.json`
 - 测试：`PAD_Lite/tests/test_dino_patch_p1a.py`
-- 五折输出：`outputs/dino_patch_safe_letterbox_336/p1a_patch_average_only/`
+- 五折输出：`outputs/03_p2b_patch_reranking/dino_patch_safe_letterbox_336/p1a_patch_average_only/`
 - 日志：`logs/dino_patch_safe_letterbox_336/p1a_gpu4.log`

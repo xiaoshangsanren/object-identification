@@ -7,7 +7,7 @@
     "prepared_root": "PAD_Lite/evaluation_data/detector_finetune_v2",
     "yolo_model": "Resource/models/yolo/yolo26n.pt",
     "detr_model": "Resource/models/detr-resnet-50",
-    "output_root": "PAD_Lite/outputs/detector_finetune"
+    "output_root": "PAD_Lite/outputs/05_detector_yolo_detr/detector_finetune"
   },
   "split": {
     "version": "detector_stratified_outer5_v2",

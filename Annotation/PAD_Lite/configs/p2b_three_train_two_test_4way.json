@@ -6,7 +6,7 @@
   "paths": {
     "source_splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_v1",
     "generated_splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_3train_2test_4way_v1",
-    "output_root": "PAD_Lite/outputs/p2b_three_train_two_test_4way_v1",
+    "output_root": "PAD_Lite/outputs/03_p2b_patch_reranking/p2b_three_train_two_test_4way_v1",
     "p0_base_config": "PAD_Lite/configs/dino_letterbox_text_anchor.json",
     "p2a_base_config": "PAD_Lite/configs/dino_patch_p2a_weighted_letterbox_336.json",
     "p2b_base_config": "PAD_Lite/configs/dino_patch_p2b_equal_fusion_336.json"

@@ -68,7 +68,7 @@ CUDA_VISIBLE_DEVICES=6 python -m PAD_Lite.dino_cli b2 --fold all --device cuda:0
 
 配置文件：`PAD_Lite/configs/dino_default.json`
 
-正式输出：`PAD_Lite/outputs/dino/{b0,b1,b2}`
+正式输出：`PAD_Lite/outputs/01_baseline_and_finetuning/dino/{b0,b1,b2}`
 
 训练日志：`PAD_Lite/logs/dino/`
 

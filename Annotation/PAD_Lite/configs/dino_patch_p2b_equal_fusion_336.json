@@ -5,9 +5,9 @@
     "splits_root": "../datasets/Russian-Military-Vehicles/pad_lite_splits_v1",
     "clip_model": "Resource/models/clip-vit-base-patch32",
     "dino_model": "Resource/models/dinov2-small",
-    "p0_features_root": "PAD_Lite/outputs/dino_letterbox_text_anchor_336/dino/b2",
-    "p2a_features_root": "PAD_Lite/outputs/experiment_runs/dino_s_p2a_weighted_patch_letterbox_336/fivefold_seed2026_v1",
-    "output_root": "PAD_Lite/outputs/dino_patch_safe_letterbox_336/p2b_cls_weighted_patch_equal_fusion"
+    "p0_features_root": "PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_text_anchor_336/dino/b2",
+    "p2a_features_root": "PAD_Lite/outputs/03_p2b_patch_reranking/experiment_runs/dino_s_p2a_weighted_patch_letterbox_336/fivefold_seed2026_v1",
+    "output_root": "PAD_Lite/outputs/03_p2b_patch_reranking/dino_patch_safe_letterbox_336/p2b_cls_weighted_patch_equal_fusion"
   },
   "data": {
     "input_mode": "letterbox",

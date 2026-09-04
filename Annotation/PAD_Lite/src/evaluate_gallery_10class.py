@@ -273,7 +273,12 @@ def main() -> None:
     parser.add_argument(
         "--checkpoint-root",
         type=Path,
-        default=PAD_LITE_ROOT / "outputs" / "final",
+        default=(
+            PAD_LITE_ROOT
+            / "outputs"
+            / "01_baseline_and_finetuning"
+            / "final"
+        ),
     )
     parser.add_argument(
         "--clip-model",
@@ -283,7 +288,12 @@ def main() -> None:
     parser.add_argument(
         "--output-root",
         type=Path,
-        default=PAD_LITE_ROOT / "outputs" / "gallery_10class",
+        default=(
+            PAD_LITE_ROOT
+            / "outputs"
+            / "04_gallery_and_recognizer_evaluation"
+            / "gallery_10class"
+        ),
     )
     parser.add_argument("--device", default="auto")
     parser.add_argument("--batch-size", type=int, default=64)

@@ -20,6 +20,7 @@ from .dino_patch_engine import PatchLetterboxTransform
 DEFAULT_EXPERIMENT_ROOT = (
     PAD_LITE_ROOT
     / "outputs"
+    / "03_p2b_patch_reranking"
     / "p2b_three_train_two_test_4way_v1"
 )
 INDEX_FIELDS = (

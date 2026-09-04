@@ -126,4 +126,4 @@ Fold 2的主要退化仍来自T-72。Patch分支虽然改善了部分T-80样本�
 - 配置：`configs/dino_patch_p1b_equal_fusion_336.json`
 - 预设：`experiments/dino_s_p1b_cls_patch_average_equal_fusion_336.json`
 - 测试：`PAD_Lite/tests/test_dino_patch_p1b.py`
-- Managed Run：`outputs/experiment_runs/dino_s_p1b_cls_patch_average_equal_fusion_336/fivefold_equal_v1/`
+- Managed Run：`outputs/03_p2b_patch_reranking/experiment_runs/dino_s_p1b_cls_patch_average_equal_fusion_336/fivefold_equal_v1/`

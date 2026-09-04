@@ -82,6 +82,7 @@ class CropIndex:
         self.classes = [item["name"] for item in raw["classes"]]
         self.records: list[CropRecord] = []
         self.by_source: dict[str, list[CropRecord]] = defaultdict(list)
+        self.by_sample_id: dict[str, CropRecord] = {}
         for item in raw["samples"]:
             record = CropRecord(
                 sample_id=item["id"],
@@ -96,8 +97,13 @@ class CropIndex:
             )
             if not record.path.is_file():
                 raise FileNotFoundError(f"Missing crop: {record.path}")
+            if record.sample_id in self.by_sample_id:
+                raise ValueError(
+                    f"Duplicate crop sample id in manifest: {record.sample_id}"
+                )
             self.records.append(record)
             self.by_source[record.source_image].append(record)
+            self.by_sample_id[record.sample_id] = record
 
     def records_for_sources(
         self, source_names: Sequence[str], exclude_tiny: bool = False
@@ -122,6 +128,39 @@ class CropIndex:
                 if exclude_tiny and record.tiny:
                     continue
                 records.append(record)
+        return records
+
+    def records_for_sample_ids(
+        self, sample_ids: Sequence[str], exclude_tiny: bool = False
+    ) -> list[CropRecord]:
+        """
+        方法作用：
+            按裁剪样本 ID 精确读取记录，用于固定 Gallery；不会把同一源图中的
+            其他目标裁剪一并加入。
+
+        输入参数：
+            self (CropIndex)：裁剪样本索引。
+            sample_ids (Sequence[str])：按期望 Gallery 顺序排列的样本 ID。
+            exclude_tiny (bool)：是否拒绝 tiny 样本。
+
+        返回值：
+            list[CropRecord]：与 sample_ids 顺序一致的裁剪记录列表。
+        """
+        records: list[CropRecord] = []
+        seen: set[str] = set()
+        for sample_id in sample_ids:
+            if sample_id in seen:
+                raise ValueError(f"Duplicate fixed gallery sample id: {sample_id}")
+            seen.add(sample_id)
+            if sample_id not in self.by_sample_id:
+                raise KeyError(f"Split references unknown crop sample id: {sample_id}")
+            record = self.by_sample_id[sample_id]
+            if exclude_tiny and record.tiny:
+                raise ValueError(
+                    f"Fixed gallery contains a tiny crop while exclude_tiny=true: "
+                    f"{sample_id}"
+                )
+            records.append(record)
         return records
 
 
@@ -186,6 +225,38 @@ def records_for_partition(
     返回值：
         list[CropRecord]：方法执行得到的结果。
     """
+    fixed_gallery = fold.get("fixed_gallery")
+    if partition == "novel_support" and fixed_gallery is not None:
+        sample_ids_by_class = fixed_gallery.get("sample_ids_by_class")
+        if not isinstance(sample_ids_by_class, dict):
+            raise ValueError("fixed_gallery.sample_ids_by_class must be a mapping")
+        novel_classes = list(fold["novel_classes"])
+        if set(sample_ids_by_class) != set(novel_classes):
+            raise ValueError(
+                "Fixed gallery classes must exactly match fold novel_classes: "
+                f"expected={novel_classes}, got={sorted(sample_ids_by_class)}"
+            )
+        records: list[CropRecord] = []
+        for class_name in novel_classes:
+            class_records = index.records_for_sample_ids(
+                sample_ids_by_class[class_name],
+                exclude_tiny=exclude_tiny,
+            )
+            wrong_classes = sorted(
+                {
+                    record.class_name
+                    for record in class_records
+                    if record.class_name != class_name
+                }
+            )
+            if wrong_classes:
+                raise ValueError(
+                    f"Fixed gallery ids for {class_name} contain classes: "
+                    f"{wrong_classes}"
+                )
+            records.extend(class_records)
+        return records
+
     return index.records_for_sources(
         partition_source_names(fold, partition),
         exclude_tiny=exclude_tiny,

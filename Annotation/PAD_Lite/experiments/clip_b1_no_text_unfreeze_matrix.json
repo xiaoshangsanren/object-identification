@@ -6,7 +6,7 @@
   "description": "CLIP B1 without text anchor; unfreeze the last {value} visual Transformer blocks.",
   "text_anchor": false,
   "overrides": {},
-  "legacy_output_root": "PAD_Lite/outputs/clip_backbone_sweep/unfreeze_{value:02d}",
+  "legacy_output_root": "PAD_Lite/outputs/01_baseline_and_finetuning/clip_backbone_sweep/unfreeze_{value:02d}",
   "tags": ["clip", "b1", "no-text", "id", "triplet", "unfreeze-sweep"],
   "matrix": {
     "field": "model.unfreeze_last_blocks",

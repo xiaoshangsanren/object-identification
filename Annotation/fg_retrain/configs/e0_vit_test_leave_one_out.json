@@ -1,0 +1,18 @@
+{
+  "experiment_name": "e0_vit_test_leave_one_out",
+  "dataset_root": "datasets/Stanford-Cars-196",
+  "split": "test",
+  "model_path": "Annotation/Resource/models/vit-base-patch16-224-imagenet",
+  "output_dir": "Annotation/fg_retrain/outputs/e0_vit_test_leave_one_out",
+  "batch_size": 128,
+  "num_workers": 8,
+  "device": "cuda",
+  "amp": true,
+  "retrieval_query_chunk_size": 512,
+  "recall_ks": [1, 5, 10],
+  "compute_map": true,
+  "save_top_k": 10,
+  "save_embeddings": true,
+  "seed": 42
+}
+

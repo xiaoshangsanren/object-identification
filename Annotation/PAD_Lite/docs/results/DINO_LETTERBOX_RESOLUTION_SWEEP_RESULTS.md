@@ -43,8 +43,8 @@
 
 ## 输出位置
 
-- 224：`PAD_Lite/outputs/dino_letterbox_text_anchor/dino/b2/`
-- 336：`PAD_Lite/outputs/dino_letterbox_text_anchor_336/dino/b2/`
-- 448：`PAD_Lite/outputs/dino_letterbox_text_anchor_448/dino/b2/`
-- 518：`PAD_Lite/outputs/dino_letterbox_text_anchor_518/dino/b2/`
+- 224：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_text_anchor/dino/b2/`
+- 336：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_text_anchor_336/dino/b2/`
+- 448：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_text_anchor_448/dino/b2/`
+- 518：`PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_letterbox_text_anchor_518/dino/b2/`
 - 日志：`PAD_Lite/logs/dino_letterbox_resolution_sweep/`

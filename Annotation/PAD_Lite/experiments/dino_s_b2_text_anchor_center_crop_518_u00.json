@@ -12,6 +12,6 @@
     "data.eval_batch_size": 16,
     "model.unfreeze_last_blocks": 0
   },
-  "legacy_output_root": "PAD_Lite/outputs/dino_center_crop_text_anchor_518",
+  "legacy_output_root": "PAD_Lite/outputs/02_dino_resolution_and_preprocess/dino_center_crop_text_anchor_518",
   "tags": ["dino-small", "b2", "text-anchor", "center-crop", "resolution"]
 }

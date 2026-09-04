@@ -26,8 +26,8 @@
 
 权重：
 
-- `PAD_Lite/outputs/final/b1/final.pt`
-- `PAD_Lite/outputs/final/b2/final.pt`
+- `PAD_Lite/outputs/01_baseline_and_finetuning/final/b1/final.pt`
+- `PAD_Lite/outputs/01_baseline_and_finetuning/final/b2/final.pt`
 
 B1 使用 GPU 4、B2 使用 GPU 6 完成训练。B2 的文本只参与训练；部署推理路径只加载视觉编码器和投影头，不加载文本编码器或文本提示。
 
@@ -48,7 +48,7 @@ B1 使用 GPU 4、B2 使用 GPU 6 完成训练。B2 的文本只参与训练；�
 - B2 相对 B0 改对 4 张，同时改错 4 张，因此当前不能声称它提升了 10 类 Top-1 准确率。
 - `M-26`、`Tiger_2`、`Panzer_IV_H` 在三个模型上的 Rank-1 都是 0，是后续误差分析的首要类别。
 
-完整结果：`PAD_Lite/outputs/gallery_10class/summary.json`。
+完整结果：`PAD_Lite/outputs/04_gallery_and_recognizer_evaluation/gallery_10class/summary.json`。
 
 ## 4. Annotation 完整流程接入
 

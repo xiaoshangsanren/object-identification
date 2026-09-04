@@ -60,6 +60,28 @@ class P2bThreeTwoProtocolTests(unittest.TestCase):
         self.assertEqual(loaded["fold"], 10)
         self.assertEqual(len(loaded["novel_classes"]), 4)
 
+    def test_fixed_gallery_ids_are_propagated_to_four_way_episodes(self) -> None:
+        folds = [_source_fold(i) for i in range(1, 6)]
+        for fold in folds:
+            fold["fixed_gallery"] = {
+                "version": "fixed_semantic_balanced_gallery_v1",
+                "manifest": "fixed.json",
+                "manifest_sha256": "abc",
+                "sample_ids_by_class": {
+                    class_name: [f"{class_name}_crop"]
+                    for class_name in fold["novel_classes"]
+                },
+            }
+        episode = build_three_two_payloads(folds)[0]
+        self.assertEqual(
+            set(episode["fixed_gallery"]["sample_ids_by_class"]),
+            set(episode["novel_classes"]),
+        )
+        self.assertEqual(
+            episode["fixed_gallery"]["version"],
+            "fixed_semantic_balanced_gallery_v1",
+        )
+
     def test_four_way_metrics_report_candidate_recall(self) -> None:
         support = np.eye(4, dtype=np.float32)
         query = np.asarray(

@@ -205,6 +205,8 @@ def build_three_two_payloads(
             "novel_support": {},
             "novel_query": {},
         }
+        fixed_gallery_ids: dict[str, list[str]] = {}
+        fixed_gallery_metadata: dict[str, Any] | None = None
         for class_name in novel_classes:
             holder = by_number[held_out_by_class[class_name]]
             partitions["novel_support"][class_name] = list(
@@ -213,6 +215,30 @@ def build_three_two_payloads(
             partitions["novel_query"][class_name] = list(
                 holder["partitions"]["novel_query"][class_name]
             )
+            holder_fixed = holder.get("fixed_gallery")
+            if holder_fixed is not None:
+                if fixed_gallery_metadata is None:
+                    fixed_gallery_metadata = {
+                        key: deepcopy(value)
+                        for key, value in holder_fixed.items()
+                        if key != "sample_ids_by_class"
+                    }
+                elif any(
+                    fixed_gallery_metadata.get(key) != value
+                    for key, value in holder_fixed.items()
+                    if key != "sample_ids_by_class"
+                ):
+                    raise ValueError(
+                        "Source folds reference inconsistent fixed Gallery manifests"
+                    )
+                sample_ids_by_class = holder_fixed.get("sample_ids_by_class", {})
+                if class_name not in sample_ids_by_class:
+                    raise ValueError(
+                        f"Fixed Gallery misses held-out class: {class_name}"
+                    )
+                fixed_gallery_ids[class_name] = list(
+                    sample_ids_by_class[class_name]
+                )
 
         train_sources = {
             item
@@ -228,20 +254,28 @@ def build_three_two_payloads(
         }
         if train_sources & test_sources:
             raise ValueError("Train and test source images overlap")
-        episodes.append(
-            {
-                "version": "pad_lite_class_holdout_fold_v1",
-                "protocol_version": PROTOCOL_VERSION,
-                "fold": episode_number,
-                "seed": int(source_folds[0].get("seed", 2026)),
-                "image_root": source_folds[0].get("image_root", "train"),
-                "source_train_folds": list(train_folds),
-                "source_test_folds": list(test_folds),
-                "base_classes": base_classes,
-                "novel_classes": novel_classes,
-                "partitions": partitions,
+        payload = {
+            "version": "pad_lite_class_holdout_fold_v1",
+            "protocol_version": PROTOCOL_VERSION,
+            "fold": episode_number,
+            "seed": int(source_folds[0].get("seed", 2026)),
+            "image_root": source_folds[0].get("image_root", "train"),
+            "source_train_folds": list(train_folds),
+            "source_test_folds": list(test_folds),
+            "base_classes": base_classes,
+            "novel_classes": novel_classes,
+            "partitions": partitions,
+        }
+        if fixed_gallery_ids:
+            if set(fixed_gallery_ids) != set(novel_classes):
+                raise ValueError(
+                    "Fixed Gallery must be available for every episode novel class"
+                )
+            payload["fixed_gallery"] = {
+                **(fixed_gallery_metadata or {}),
+                "sample_ids_by_class": fixed_gallery_ids,
             }
-        )
+        episodes.append(payload)
     return episodes
 
 

@@ -7,6 +7,6 @@
   "description": "P1b fixed 50/50 joint cosine representation using frozen P0 CLS-B2 and P1a Masked Patch Average caches.",
   "text_anchor": true,
   "overrides": {},
-  "legacy_output_root": "PAD_Lite/outputs/dino_patch_safe_letterbox_336/p1b_cls_patch_average_equal_fusion",
+  "legacy_output_root": "PAD_Lite/outputs/03_p2b_patch_reranking/dino_patch_safe_letterbox_336/p1b_cls_patch_average_equal_fusion",
   "tags": ["dino-small", "p1b", "cls", "patch-average", "equal-fusion", "text-anchor-inherited"]
 }

@@ -461,6 +461,97 @@ def box_iou(box: Iterable[float], boxes: np.ndarray) -> np.ndarray:
     return intersection / np.maximum(union, 1e-12)
 
 
+def _pair_overlap_quality(
+    prediction_box: Iterable[float], ground_truth_box: Iterable[float]
+) -> dict[str, float]:
+    """
+    方法作用：
+        计算单个预测框相对单个GT框的IoU、目标覆盖率和裁剪纯净度。
+
+    输入参数：
+        prediction_box (Iterable[float])：预测xyxy框，形状(4,)；
+        ground_truth_box (Iterable[float])：XML真实xyxy框，形状(4,)。
+
+    返回值：
+        dict[str,float]：intersection、iou、target_coverage和crop_purity。
+    """
+
+    prediction = np.asarray(list(prediction_box), dtype=np.float64)
+    target = np.asarray(list(ground_truth_box), dtype=np.float64)
+    left_top = np.maximum(prediction[:2], target[:2])
+    right_bottom = np.minimum(prediction[2:], target[2:])
+    intersection_size = np.maximum(right_bottom - left_top, 0.0)
+    intersection = float(intersection_size[0] * intersection_size[1])
+    prediction_area = max(float(prediction[2] - prediction[0]), 0.0) * max(
+        float(prediction[3] - prediction[1]), 0.0
+    )
+    target_area = max(float(target[2] - target[0]), 0.0) * max(
+        float(target[3] - target[1]), 0.0
+    )
+    union = prediction_area + target_area - intersection
+    return {
+        "intersection": intersection,
+        "iou": intersection / max(union, 1e-12),
+        "target_coverage": intersection / max(target_area, 1e-12),
+        "crop_purity": intersection / max(prediction_area, 1e-12),
+    }
+
+
+def _match_prediction_details(
+    record: ImageRecord,
+    rows: list[dict[str, Any]],
+    iou_threshold: float,
+    score_threshold: float,
+) -> dict[str, Any]:
+    """
+    方法作用：
+        按置信度执行预测框与GT的一对一贪心匹配，并保留每对框的重合质量。
+
+    输入参数：
+        record：含GT boxes (N,4)的整图；rows：M个预测；
+        iou_threshold：成功匹配IoU；score_threshold：最低预测置信度。
+
+    返回值：
+        dict[str,Any]：TP/FP/FN、候选框数、匹配GT集合和逐匹配框质量。
+    """
+
+    matched: set[int] = set()
+    matches: list[dict[str, Any]] = []
+    false_positive = 0
+    candidate_count = 0
+    for row in sorted(rows, key=lambda item: float(item["score"]), reverse=True):
+        if float(row["score"]) < score_threshold:
+            continue
+        candidate_count += 1
+        overlaps = box_iou(row["box"], record.boxes)
+        available = [index for index in range(len(overlaps)) if index not in matched]
+        if not available:
+            false_positive += 1
+            continue
+        best = max(available, key=lambda index: float(overlaps[index]))
+        if float(overlaps[best]) < iou_threshold:
+            false_positive += 1
+            continue
+        matched.add(best)
+        quality = _pair_overlap_quality(row["box"], record.boxes[best])
+        matches.append(
+            {
+                "ground_truth_index": best,
+                "class_name": record.class_names[best],
+                "score": float(row["score"]),
+                **quality,
+            }
+        )
+    return {
+        "tp": len(matches),
+        "fp": false_positive,
+        "fn": len(record.boxes) - len(matched),
+        "candidate_count": candidate_count,
+        "matched": matched,
+        "matches": matches,
+    }
+
+
 def _match_predictions(
     record: ImageRecord,
     rows: list[dict[str, Any]],
@@ -479,24 +570,45 @@ def _match_predictions(
         tuple：TP、FP、FN，以及被匹配GT下标集合。
     """
 
-    matched: set[int] = set()
-    true_positive = 0
-    false_positive = 0
-    for row in sorted(rows, key=lambda item: float(item["score"]), reverse=True):
-        if float(row["score"]) < score_threshold:
-            continue
-        overlaps = box_iou(row["box"], record.boxes)
-        available = [index for index in range(len(overlaps)) if index not in matched]
-        if not available:
-            false_positive += 1
-            continue
-        best = max(available, key=lambda index: float(overlaps[index]))
-        if float(overlaps[best]) >= iou_threshold:
-            matched.add(best)
-            true_positive += 1
-        else:
-            false_positive += 1
-    return true_positive, false_positive, len(record.boxes) - len(matched), matched
+    details = _match_prediction_details(
+        record,
+        rows,
+        iou_threshold=iou_threshold,
+        score_threshold=score_threshold,
+    )
+    return details["tp"], details["fp"], details["fn"], details["matched"]
+
+
+def _distribution_summary(values: list[float]) -> dict[str, float | int | None]:
+    """
+    方法作用：
+        汇总匹配框质量分布，直接报告均值、中位数和低质量10%分位数。
+
+    输入参数：
+        values (list[float])：IoU、覆盖率或纯净度标量列表。
+
+    返回值：
+        dict：count、mean、median、p10、min和max；空列表对应值为None。
+    """
+
+    if not values:
+        return {
+            "count": 0,
+            "mean": None,
+            "median": None,
+            "p10": None,
+            "min": None,
+            "max": None,
+        }
+    array = np.asarray(values, dtype=np.float64)
+    return {
+        "count": int(len(array)),
+        "mean": float(np.mean(array)),
+        "median": float(np.median(array)),
+        "p10": float(np.percentile(array, 10)),
+        "min": float(np.min(array)),
+        "max": float(np.max(array)),
+    }
 
 
 def _average_precision(
@@ -562,6 +674,8 @@ def evaluate_predictions(
     iou_thresholds: list[float],
     operating_threshold: float,
     small_object_area: float,
+    target_coverage_threshold: float = 0.90,
+    crop_purity_threshold: float = 0.50,
 ) -> dict[str, Any]:
     """
     方法作用：
@@ -569,30 +683,81 @@ def evaluate_predictions(
 
     输入参数：
         records：I张图、N个GT框；predictions：每图预测框；iou_thresholds：AP阈值列表；
-        operating_threshold：默认置信度运行点；small_object_area：小目标面积上界。
+        operating_threshold：默认置信度运行点；small_object_area：小目标面积上界；
+        target_coverage_threshold：车辆被完整保留的最低GT覆盖率；
+        crop_purity_threshold：可用裁剪中车辆占预测框面积的最低比例。
 
     返回值：
-        dict[str,Any]：检测指标、计数和逐原始车型召回率。
+        dict[str,Any]：目标找全率、整图成功率、框质量、误检、AP和逐车型召回率。
     """
 
+    if not 0.0 < target_coverage_threshold <= 1.0:
+        raise ValueError("target_coverage_threshold must be in (0, 1]")
+    if not 0.0 < crop_purity_threshold <= 1.0:
+        raise ValueError("crop_purity_threshold must be in (0, 1]")
     ap_by_iou = {
         f"{threshold:.2f}": _average_precision(records, predictions, threshold)
         for threshold in iou_thresholds
     }
     totals = {"tp": 0, "fp": 0, "fn": 0}
+    totals_iou75 = {"tp": 0, "fp": 0, "fn": 0}
     per_class: dict[str, dict[str, int]] = {}
     small_total = 0
     small_matched = 0
+    candidate_count = 0
+    images_with_gt = 0
+    all_detected_iou50 = 0
+    all_detected_iou75 = 0
+    all_complete_crop = 0
+    all_usable_crop = 0
+    zero_detected_images = 0
+    complete_crop_count = 0
+    usable_crop_count = 0
+    matched_ious: list[float] = []
+    matched_coverages: list[float] = []
+    matched_purities: list[float] = []
     for record in records:
-        tp, fp, fn, matched = _match_predictions(
+        details = _match_prediction_details(
             record,
             predictions.get(record.image_path.name, []),
             iou_threshold=0.5,
             score_threshold=operating_threshold,
         )
-        totals["tp"] += tp
-        totals["fp"] += fp
-        totals["fn"] += fn
+        details_iou75 = _match_prediction_details(
+            record,
+            predictions.get(record.image_path.name, []),
+            iou_threshold=0.75,
+            score_threshold=operating_threshold,
+        )
+        for key in totals:
+            totals[key] += int(details[key])
+            totals_iou75[key] += int(details_iou75[key])
+        candidate_count += int(details["candidate_count"])
+        matched = details["matched"]
+        matches = details["matches"]
+        matched_ious.extend(float(item["iou"]) for item in matches)
+        matched_coverages.extend(float(item["target_coverage"]) for item in matches)
+        matched_purities.extend(float(item["crop_purity"]) for item in matches)
+        complete_indices = {
+            int(item["ground_truth_index"])
+            for item in matches
+            if float(item["target_coverage"]) >= target_coverage_threshold
+        }
+        usable_indices = {
+            int(item["ground_truth_index"])
+            for item in matches
+            if float(item["target_coverage"]) >= target_coverage_threshold
+            and float(item["crop_purity"]) >= crop_purity_threshold
+        }
+        complete_crop_count += len(complete_indices)
+        usable_crop_count += len(usable_indices)
+        if len(record.boxes) > 0:
+            images_with_gt += 1
+            all_detected_iou50 += int(details["fn"] == 0)
+            all_detected_iou75 += int(details_iou75["fn"] == 0)
+            all_complete_crop += int(len(complete_indices) == len(record.boxes))
+            all_usable_crop += int(len(usable_indices) == len(record.boxes))
+            zero_detected_images += int(details["tp"] == 0)
         for index, class_name in enumerate(record.class_names):
             row = per_class.setdefault(class_name, {"gt": 0, "matched": 0})
             row["gt"] += 1
@@ -607,10 +772,47 @@ def evaluate_predictions(
     precision = totals["tp"] / max(totals["tp"] + totals["fp"], 1)
     recall = totals["tp"] / max(totals["tp"] + totals["fn"], 1)
     f1 = 2.0 * precision * recall / max(precision + recall, 1e-12)
+    recall_iou75 = totals_iou75["tp"] / max(
+        totals_iou75["tp"] + totals_iou75["fn"], 1
+    )
+    ground_truth_count = sum(len(record.boxes) for record in records)
+    matched_count = len(matched_ious)
     return {
         "image_count": len(records),
-        "ground_truth_count": sum(len(record.boxes) for record in records),
+        "ground_truth_count": ground_truth_count,
         "prediction_count_at_ap_floor": sum(len(rows) for rows in predictions.values()),
+        "primary_crop_metrics": {
+            "score_threshold": operating_threshold,
+            "object_recall_iou50": recall,
+            "object_recall_iou75": recall_iou75,
+            "all_targets_detected_image_count_iou50": all_detected_iou50,
+            "all_targets_detected_image_rate_iou50": all_detected_iou50
+            / max(images_with_gt, 1),
+            "all_targets_detected_image_count_iou75": all_detected_iou75,
+            "all_targets_detected_image_rate_iou75": all_detected_iou75
+            / max(images_with_gt, 1),
+            "complete_crop_count": complete_crop_count,
+            "complete_crop_recall": complete_crop_count / max(ground_truth_count, 1),
+            "all_complete_crop_image_count": all_complete_crop,
+            "all_complete_crop_image_rate": all_complete_crop / max(images_with_gt, 1),
+            "usable_crop_count": usable_crop_count,
+            "usable_crop_recall": usable_crop_count / max(ground_truth_count, 1),
+            "all_usable_crop_image_count": all_usable_crop,
+            "all_usable_crop_image_rate": all_usable_crop / max(images_with_gt, 1),
+            "zero_detected_image_count": zero_detected_images,
+            "zero_detected_image_rate": zero_detected_images / max(images_with_gt, 1),
+        },
+        "matched_box_quality_iou50": {
+            "matched_box_count": matched_count,
+            "iou": _distribution_summary(matched_ious),
+            "target_coverage": _distribution_summary(matched_coverages),
+            "crop_purity": _distribution_summary(matched_purities),
+            "target_coverage_threshold": target_coverage_threshold,
+            "crop_purity_threshold": crop_purity_threshold,
+            "vehicle_cut_count": matched_count - complete_crop_count,
+            "vehicle_cut_rate_among_matches": (matched_count - complete_crop_count)
+            / max(matched_count, 1),
+        },
         "ap_by_iou": ap_by_iou,
         "map_50_95": float(np.mean(list(ap_by_iou.values()))),
         "ap_50": ap_by_iou.get("0.50", 0.0),
@@ -622,6 +824,9 @@ def evaluate_predictions(
             "recall": recall,
             "f1": f1,
             "false_positives_per_image": totals["fp"] / max(len(records), 1),
+            "candidate_crop_count": candidate_count,
+            "candidate_crops_per_image": candidate_count / max(len(records), 1),
+            "valid_crops_per_image": totals["tp"] / max(len(records), 1),
             "small_object_gt": small_total,
             "small_object_recall": small_matched / max(small_total, 1),
         },
@@ -723,6 +928,117 @@ def _model_weight_path(model_name: str, model_path: Path) -> Path:
     raise FileNotFoundError(f"No DETR weight file found in {model_path}")
 
 
+def _detector_display_label(model_name: str, result: dict[str, Any]) -> str:
+    """
+    方法作用：
+        根据本次实际加载的权重路径生成报告中的模型名，避免切换YOLO版本后标题仍被写死。
+
+    输入参数：
+        model_name (str)：检测器键，yolo或detr；
+        result (dict[str,Any])：单个检测器的运行时与指标结果。
+
+    返回值：
+        str：供Markdown报告展示的模型名。
+    """
+
+    if model_name == "yolo":
+        stem = Path(result["runtime"]["model_path"]).stem
+        return f"YOLO{stem[4:]}" if stem.lower().startswith("yolo") else stem
+    if model_name == "detr":
+        return "DETR-R50"
+    return model_name
+
+
+def _write_crop_evaluation_report(run_root: Path, summary: dict[str, Any]) -> None:
+    """
+    方法作用：
+        生成以“找全车辆和裁剪质量”为主、标准AP为辅的阶段1Markdown报告。
+
+    输入参数：
+        run_root (Path)：本次实验输出目录；summary：YOLO/DETR完整指标字典。
+
+    返回值：
+        None：报告写入run_root/RESULTS.md。
+    """
+
+    labels = {
+        name: _detector_display_label(name, result)
+        for name, result in summary["results"].items()
+    }
+    lines = [
+        "# 实验1阶段1：未微调车辆候选框评测（截取指标版）",
+        "",
+        f"数据：{summary['selected_image_count']}张整图、"
+        f"{summary['selected_ground_truth_count']}个XML车辆框；两个检测器均未训练。",
+        "",
+        "## 主指标：是否找全并正确截取车辆",
+        "",
+        "| 模型 | 对象Recall@IoU50 | 整图全部找全@IoU50 | 对象Recall@IoU75 | "
+        "完整裁剪Recall | 整图全部完整裁剪 | 可用裁剪Recall | 零检出图片率 |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for name, result in summary["results"].items():
+        primary = result["metrics"]["primary_crop_metrics"]
+        lines.append(
+            f"| {labels.get(name, name)} | {primary['object_recall_iou50'] * 100:.2f}% | "
+            f"{primary['all_targets_detected_image_rate_iou50'] * 100:.2f}% | "
+            f"{primary['object_recall_iou75'] * 100:.2f}% | "
+            f"{primary['complete_crop_recall'] * 100:.2f}% | "
+            f"{primary['all_complete_crop_image_rate'] * 100:.2f}% | "
+            f"{primary['usable_crop_recall'] * 100:.2f}% | "
+            f"{primary['zero_detected_image_rate'] * 100:.2f}% |"
+        )
+    lines.extend(
+        [
+            "",
+            "完整裁剪要求IoU不低于0.50且车辆覆盖率不低于90%；可用裁剪还要求车辆占预测框面积不低于50%。",
+            "",
+            "## 匹配框重合质量（IoU不低于0.50的正确框）",
+            "",
+            "| 模型 | 平均IoU | IoU中位数 | IoU P10 | 平均车辆覆盖率 | "
+            "平均裁剪纯净度 | 车辆被切比例 |",
+            "|---|---:|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for name, result in summary["results"].items():
+        quality = result["metrics"]["matched_box_quality_iou50"]
+        lines.append(
+            f"| {labels.get(name, name)} | {quality['iou']['mean']:.4f} | "
+            f"{quality['iou']['median']:.4f} | {quality['iou']['p10']:.4f} | "
+            f"{quality['target_coverage']['mean'] * 100:.2f}% | "
+            f"{quality['crop_purity']['mean'] * 100:.2f}% | "
+            f"{quality['vehicle_cut_rate_among_matches'] * 100:.2f}% |"
+        )
+    lines.extend(
+        [
+            "",
+            "## 辅助指标：误检、标准检测指标和效率",
+            "",
+            "| 模型 | Precision@0.30 | FP/图 | 候选裁剪/图 | AP50 | AP75 | "
+            "mAP50:95 | 小目标Recall | ms/图 |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for name, result in summary["results"].items():
+        metrics = result["metrics"]
+        operating = metrics["operating_point"]
+        lines.append(
+            f"| {labels.get(name, name)} | {operating['precision'] * 100:.2f}% | "
+            f"{operating['false_positives_per_image']:.3f} | "
+            f"{operating['candidate_crops_per_image']:.3f} | {metrics['ap_50']:.4f} | "
+            f"{metrics['ap_75']:.4f} | {metrics['map_50_95']:.4f} | "
+            f"{operating['small_object_recall'] * 100:.2f}% | "
+            f"{result['runtime']['milliseconds_per_image']:.2f} |"
+        )
+    lines.extend(
+        [
+            "",
+            "说明：整图全部找全率要求一张图内每个XML目标都成功匹配，任何一个目标漏检都将该图片记为失败。",
+        ]
+    )
+    (run_root / "RESULTS.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def run_evaluation(args: argparse.Namespace) -> Path:
     """
     方法作用：
@@ -798,6 +1114,10 @@ def run_evaluation(args: argparse.Namespace) -> Path:
             iou_thresholds=[float(item) for item in evaluation["iou_thresholds"]],
             operating_threshold=float(evaluation["operating_score_threshold"]),
             small_object_area=float(evaluation["small_object_area"]),
+            target_coverage_threshold=float(
+                evaluation.get("target_coverage_threshold", 0.90)
+            ),
+            crop_purity_threshold=float(evaluation.get("crop_purity_threshold", 0.50)),
         )
         _write_predictions(run_root / f"{detector_name}_predictions.jsonl", records, predictions)
         summary["results"][detector_name] = {
@@ -806,11 +1126,13 @@ def run_evaluation(args: argparse.Namespace) -> Path:
             "metrics": metrics,
         }
         print(
-            f"{detector_name.upper()}: AP50={metrics['ap_50']:.4f}, "
-            f"mAP50:95={metrics['map_50_95']:.4f}, "
-            f"Recall@0.30={metrics['operating_point']['recall']:.4f}"
+            f"{detector_name.upper()}: "
+            f"ObjectRecall@IoU50={metrics['primary_crop_metrics']['object_recall_iou50']:.4f}, "
+            f"AllTargetsImageRate={metrics['primary_crop_metrics']['all_targets_detected_image_rate_iou50']:.4f}, "
+            f"MeanMatchedIoU={metrics['matched_box_quality_iou50']['iou']['mean']:.4f}"
         )
     _write_json(run_root / "summary.json", summary)
+    _write_crop_evaluation_report(run_root, summary)
     _write_json(
         run_root / "resolved_config.json",
         {
