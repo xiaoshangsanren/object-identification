@@ -274,3 +274,35 @@ Annotation/fg_retrain/outputs/E1_VIT_VisionL/
 ```
 
 其中包括训练历史、恢复检查点、最终纯视觉模型、测试特征、逐 Query 结果和总指标。
+
+## 10. E0/E1共有的类别对困难度指标
+
+E0和E1在常规全Gallery评测后，都会额外遍历196类构成的19,110个无向类别对。对有向关系`A -> B`：
+
+```text
+Query：每一张A类测试图
+Pairwise Gallery：其他A类测试图 + 全部B类测试图
+Positive：其他A类图
+Negative：B类图
+```
+
+记录首张Positive出现的位置，并分别计算`Recall@1、@2、@3、@4、@5`。类别对还包含：
+
+- `a_to_b`与`b_to_a`：两个方向各自的Recall@1～5；
+- `balanced_recall_at_k`：两个方向Recall@K的等权平均；
+- `micro_recall_at_k`：按两个类别Query数量加权的Recall@K；
+- `difficulty_score_r1_to_r5`：`1-balanced Recall@K`在K=1～5上的平均值，越大越难；
+- `mean_similarity_margin`：最佳同类相似度减最佳对方类别相似度，负值表示对方更近；
+- `global_top1_confusion_count`：在完整196类Gallery中实际被对方夺走Top-1的次数；
+- `prototype_cosine_similarity`：两个类别平均视觉原型的余弦相似度。
+
+每次实验自动输出：
+
+```text
+pairwise_difficulty_summary.json
+pairwise_difficulty_all_pairs.json
+pairwise_difficulty_all_pairs.csv
+pairwise_difficulty_per_class.json
+```
+
+其中全类别对JSON/CSV包含19,110对，逐类别文件为每种车型直接列出Top-20困难邻居。已有embedding可以通过`fg_retrain.analyze_pairwise_difficulty`补算，无需重新训练。

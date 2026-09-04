@@ -18,6 +18,11 @@ import transformers
 from fg_retrain.config import ExperimentConfig
 from fg_retrain.data import build_dataloader, load_stanford_cars_parquet
 from fg_retrain.modeling import PureVisualViT, extract_embeddings, load_image_processor
+from fg_retrain.pairwise_difficulty import (
+    build_pairwise_metrics_section,
+    evaluate_pairwise_difficulty,
+    save_pairwise_difficulty,
+)
 from fg_retrain.retrieval import evaluate_leave_one_out
 
 
@@ -255,6 +260,22 @@ def main() -> None:
     evaluation.metrics["model"] = "google/vit-base-patch16-224 (ImageNet-21k pretraining)"
     evaluation.metrics["embedding"] = "L2-normalized final-layer CLS token"
     evaluation.metrics["test_parquet_files"] = [str(path) for path in data.parquet_files]
+    print("      computing all class-pair Recall@1..5 difficulty metrics")
+    pairwise_evaluation = evaluate_pairwise_difficulty(
+        features=features,
+        labels=labels,
+        class_names=data.class_names,
+        device=device,
+        query_chunk_size=config.pairwise_query_chunk_size,
+        recall_ks=config.pairwise_recall_ks,
+        top_n_per_class=config.pairwise_top_n_per_class,
+    )
+    pairwise_artifacts = save_pairwise_difficulty(run_dir, pairwise_evaluation)
+    evaluation.metrics["pairwise_difficulty"] = build_pairwise_metrics_section(
+        pairwise_evaluation,
+        pairwise_artifacts,
+        top_pair_count=20,
+    )
     save_json(run_dir / "metrics.json", evaluation.metrics)
     save_jsonl(run_dir / "per_query.jsonl", evaluation.per_query)
 

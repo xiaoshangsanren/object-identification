@@ -32,7 +32,9 @@
   "compute_map": true,
   "save_top_k": 10,
   "save_embeddings": true,
+  "pairwise_query_chunk_size": 256,
+  "pairwise_recall_ks": [1, 2, 3, 4, 5],
+  "pairwise_top_n_per_class": 20,
   "checkpoint_every_epochs": 5,
   "seed": 42
 }
-

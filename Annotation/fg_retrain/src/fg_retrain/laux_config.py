@@ -31,6 +31,8 @@ class LauxConfig:
         device/amp/data_parallel/gradient_checkpointing: 计算设备与显存相关设置。
         retrieval_query_chunk_size: 检索相似度矩阵的Query分块大小``Q``。
         recall_ks/compute_map/save_top_k/save_embeddings: 检索指标及结果保存设置。
+        pairwise_query_chunk_size/pairwise_recall_ks/pairwise_top_n_per_class:
+            成对受限检索的分块、Recall@K和逐类别困难邻居展示设置。
         checkpoint_every_epochs: 检查点保存周期。
         seed: 随机种子。
     返回值:
@@ -70,6 +72,9 @@ class LauxConfig:
     compute_map: bool = True
     save_top_k: int = 10
     save_embeddings: bool = True
+    pairwise_query_chunk_size: int = 256
+    pairwise_recall_ks: tuple[int, ...] = (1, 2, 3, 4, 5)
+    pairwise_top_n_per_class: int = 20
     checkpoint_every_epochs: int = 5
     seed: int = 42
 
@@ -90,6 +95,8 @@ class LauxConfig:
             raw: dict[str, Any] = json.load(handle)
         if "recall_ks" in raw:
             raw["recall_ks"] = tuple(int(k) for k in raw["recall_ks"])
+        if "pairwise_recall_ks" in raw:
+            raw["pairwise_recall_ks"] = tuple(int(k) for k in raw["pairwise_recall_ks"])
         config = cls(**raw)
         config.validate()
         return config
@@ -123,6 +130,10 @@ class LauxConfig:
             raise ValueError("Invalid evaluation loader settings.")
         if not self.recall_ks or any(k <= 0 for k in self.recall_ks):
             raise ValueError("recall_ks must contain positive integers.")
+        if self.pairwise_query_chunk_size <= 0 or self.pairwise_top_n_per_class <= 0:
+            raise ValueError("Pairwise chunk size and top-N must be positive.")
+        if tuple(self.pairwise_recall_ks) != (1, 2, 3, 4, 5):
+            raise ValueError("Pairwise difficulty must report Recall@1 through Recall@5.")
         if self.checkpoint_every_epochs <= 0:
             raise ValueError("checkpoint_every_epochs must be positive.")
         if self.device not in {"cuda", "cpu"}:
@@ -194,6 +205,9 @@ class ResolvedLauxConfig:
     compute_map: bool
     save_top_k: int
     save_embeddings: bool
+    pairwise_query_chunk_size: int
+    pairwise_recall_ks: tuple[int, ...]
+    pairwise_top_n_per_class: int
     checkpoint_every_epochs: int
     seed: int
 
@@ -226,5 +240,6 @@ class ResolvedLauxConfig:
         for key in ("dataset_root", "model_path", "output_dir"):
             result[key] = str(result[key])
         result["recall_ks"] = list(self.recall_ks)
+        result["pairwise_recall_ks"] = list(self.pairwise_recall_ks)
         result["train_batch_size"] = self.train_batch_size
         return result

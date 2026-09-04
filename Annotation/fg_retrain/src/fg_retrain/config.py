@@ -29,6 +29,9 @@ class ExperimentConfig:
         compute_map: 是否计算mAP。
         save_top_k: 每个Query保存的邻居数量。
         save_embeddings: 是否保存测试特征``[N,D]``。
+        pairwise_query_chunk_size: 成对难度计算的Query分块大小``Q_pair``。
+        pairwise_recall_ks: 成对受限检索的Recall@K列表，当前为1至5。
+        pairwise_top_n_per_class: 每个类别在摘要中直接列出的困难邻居数量。
         seed: 随机种子。
     返回值:
         配置对象本身不直接返回主数据；各字段供E0入口读取。
@@ -48,6 +51,9 @@ class ExperimentConfig:
     compute_map: bool = True
     save_top_k: int = 10
     save_embeddings: bool = True
+    pairwise_query_chunk_size: int = 256
+    pairwise_recall_ks: tuple[int, ...] = (1, 2, 3, 4, 5)
+    pairwise_top_n_per_class: int = 20
     seed: int = 42
 
     @classmethod
@@ -67,6 +73,8 @@ class ExperimentConfig:
             raw: dict[str, Any] = json.load(handle)
         if "recall_ks" in raw:
             raw["recall_ks"] = tuple(int(k) for k in raw["recall_ks"])
+        if "pairwise_recall_ks" in raw:
+            raw["pairwise_recall_ks"] = tuple(int(k) for k in raw["pairwise_recall_ks"])
         config = cls(**raw)
         config.validate()
         return config
@@ -92,6 +100,10 @@ class ExperimentConfig:
             raise ValueError("recall_ks must contain positive integers.")
         if self.save_top_k <= 0:
             raise ValueError("save_top_k must be positive.")
+        if self.pairwise_query_chunk_size <= 0 or self.pairwise_top_n_per_class <= 0:
+            raise ValueError("Pairwise chunk size and top-N must be positive.")
+        if tuple(self.pairwise_recall_ks) != (1, 2, 3, 4, 5):
+            raise ValueError("Pairwise difficulty must report Recall@1 through Recall@5.")
         if self.device not in {"cuda", "cpu"}:
             raise ValueError("device must be either 'cuda' or 'cpu'.")
 
@@ -143,6 +155,9 @@ class ResolvedExperimentConfig:
     compute_map: bool
     save_top_k: int
     save_embeddings: bool
+    pairwise_query_chunk_size: int
+    pairwise_recall_ks: tuple[int, ...]
+    pairwise_top_n_per_class: int
     seed: int
 
     def as_serializable_dict(self) -> dict[str, Any]:
@@ -160,6 +175,7 @@ class ResolvedExperimentConfig:
         for key in ("dataset_root", "model_path", "output_dir"):
             result[key] = str(result[key])
         result["recall_ks"] = list(self.recall_ks)
+        result["pairwise_recall_ks"] = list(self.pairwise_recall_ks)
         return result
 
 
