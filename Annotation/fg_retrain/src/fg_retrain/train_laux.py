@@ -11,6 +11,7 @@ import random
 import sys
 import time
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -59,6 +60,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Reject an existing checkpoint instead of resuming it.",
     )
     parser.add_argument(
+        "--run-name",
+        default=None,
+        help="Optional isolated output subdirectory name; default keeps legacy output behavior.",
+    )
+    parser.add_argument(
         "--smoke-epochs",
         type=int,
         default=None,
@@ -95,6 +101,28 @@ def select_device(requested: str) -> torch.device:
     if requested == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but is unavailable.")
     return torch.device(requested)
+
+
+def make_run_directory(output_root: Path, run_name: str) -> Path:
+    """创建不覆盖历史结果的E1运行目录。
+
+    作用:
+        在E1输出根目录下使用指定名称创建子目录；名称冲突时自动添加数字后缀。
+    参数:
+        output_root: E1输出根目录。
+        run_name: 本次运行的可读名称。
+    返回值:
+        本次新建的运行目录绝对``Path``。
+    """
+
+    stem = run_name or datetime.now().strftime("%Y%m%d_%H%M%S")
+    candidate = output_root / stem
+    suffix = 1
+    while candidate.exists():
+        candidate = output_root / f"{stem}_{suffix:02d}"
+        suffix += 1
+    candidate.mkdir(parents=True)
+    return candidate
 
 
 def seed_everything(seed: int) -> None:
@@ -430,7 +458,11 @@ def main() -> None:
     config = LauxConfig.from_json(args.config.resolve()).resolved(repository_root())
     device = select_device(args.device or config.device)
     seed_everything(config.seed)
-    output_dir = config.output_dir
+    output_dir = (
+        make_run_directory(config.output_dir, args.run_name)
+        if args.run_name is not None
+        else config.output_dir
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_path = output_dir / "checkpoint_last.pt"
     history_path = output_dir / "train_history.jsonl"

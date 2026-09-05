@@ -22,6 +22,8 @@ class PairwiseDifficultyEvaluation:
         summary: 全局汇总字典，包含类别对数量、指标定义和最困难类别对。
         pairs: 长度``[C*(C-1)/2]``的无向类别对指标列表。
         per_class: 长度``[C]``的逐类别困难邻居列表；每类保留最困难的``H``个方向性结果。
+        confusions_per_class: 长度``[C]``的逐类别Top-1错分统计；每类包含
+            对其余``C-1``类的错分次数/比例和按次数排序的Top-5。
     返回值:
         成对难度评测容器本身。
     """
@@ -29,6 +31,7 @@ class PairwiseDifficultyEvaluation:
     summary: dict[str, Any]
     pairs: list[dict[str, Any]]
     per_class: list[dict[str, Any]]
+    confusions_per_class: list[dict[str, Any]]
 
 
 def _direction_metrics(
@@ -262,6 +265,7 @@ def evaluate_pairwise_difficulty(
         pair["difficulty_rank"] = rank
 
     per_class: list[dict[str, Any]] = []
+    confusions_per_class: list[dict[str, Any]] = []
     for label, neighbors in enumerate(directed_by_class):
         neighbors.sort(
             key=lambda item: (
@@ -276,6 +280,43 @@ def evaluate_pairwise_difficulty(
                 "class_name": class_names[label],
                 "num_queries": len(class_indices[label]),
                 "top_hardest": neighbors[: min(top_n_per_class, len(neighbors))],
+            }
+        )
+
+        confusion_rows = [
+            {
+                "predicted_label": neighbor["other_label"],
+                "predicted_class_name": neighbor["other_class_name"],
+                "confusion_count": neighbor["global_top1_confusion_count"],
+                "confusion_rate": neighbor["global_top1_confusion_rate"],
+            }
+            for neighbor in neighbors
+        ]
+        confusion_rows.sort(
+            key=lambda item: (
+                -item["confusion_count"],
+                -item["confusion_rate"],
+                item["predicted_label"],
+            )
+        )
+        for rank, row in enumerate(confusion_rows, start=1):
+            row["error_rank"] = rank
+        nonzero_confusions = [
+            row for row in confusion_rows if row["confusion_count"] > 0
+        ]
+        error_count = sum(row["confusion_count"] for row in confusion_rows)
+        query_count = len(class_indices[label])
+        confusions_per_class.append(
+            {
+                "true_label": label,
+                "true_class_name": class_names[label],
+                "num_queries": query_count,
+                "correct_top1_count": query_count - error_count,
+                "correct_top1_rate": (query_count - error_count) / query_count,
+                "error_top1_count": error_count,
+                "error_top1_rate": error_count / query_count,
+                "top5_error_classifications": nonzero_confusions[:5],
+                "all_other_class_confusions": confusion_rows,
             }
         )
 
@@ -299,7 +340,12 @@ def evaluate_pairwise_difficulty(
         "difficulty_score_median": float(scores.median().item()),
         "top_hardest_pairs": pairs[: min(100, len(pairs))],
     }
-    return PairwiseDifficultyEvaluation(summary=summary, pairs=pairs, per_class=per_class)
+    return PairwiseDifficultyEvaluation(
+        summary=summary,
+        pairs=pairs,
+        per_class=per_class,
+        confusions_per_class=confusions_per_class,
+    )
 
 
 def save_pairwise_difficulty(
@@ -322,10 +368,13 @@ def save_pairwise_difficulty(
     pairs_path = output_dir / "pairwise_difficulty_all_pairs.json"
     per_class_path = output_dir / "pairwise_difficulty_per_class.json"
     csv_path = output_dir / "pairwise_difficulty_all_pairs.csv"
+    confusion_path = output_dir / "top1_confusion_per_class.json"
+    confusion_csv_path = output_dir / "top1_confusion_all_directions.csv"
     for path, value in (
         (summary_path, evaluation.summary),
         (pairs_path, evaluation.pairs),
         (per_class_path, evaluation.per_class),
+        (confusion_path, evaluation.confusions_per_class),
     ):
         with path.open("w", encoding="utf-8") as handle:
             json.dump(value, handle, ensure_ascii=False, indent=2)
@@ -358,11 +407,41 @@ def save_pairwise_difficulty(
                 row[f"b_to_a_recall_at_{k}"] = pair["b_to_a"]["recall_at_k"][str(k)]
             writer.writerow(row)
 
+    confusion_fieldnames = [
+        "true_label",
+        "true_class_name",
+        "predicted_label",
+        "predicted_class_name",
+        "num_queries",
+        "confusion_count",
+        "confusion_rate",
+        "error_rank",
+    ]
+    with confusion_csv_path.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=confusion_fieldnames)
+        writer.writeheader()
+        for class_result in evaluation.confusions_per_class:
+            for confusion in class_result["all_other_class_confusions"]:
+                writer.writerow(
+                    {
+                        "true_label": class_result["true_label"],
+                        "true_class_name": class_result["true_class_name"],
+                        "predicted_label": confusion["predicted_label"],
+                        "predicted_class_name": confusion["predicted_class_name"],
+                        "num_queries": class_result["num_queries"],
+                        "confusion_count": confusion["confusion_count"],
+                        "confusion_rate": confusion["confusion_rate"],
+                        "error_rank": confusion["error_rank"],
+                    }
+                )
+
     return {
         "summary": summary_path.name,
         "all_pairs_json": pairs_path.name,
         "per_class_json": per_class_path.name,
         "all_pairs_csv": csv_path.name,
+        "top1_confusion_per_class_json": confusion_path.name,
+        "top1_confusion_all_directions_csv": confusion_csv_path.name,
     }
 
 

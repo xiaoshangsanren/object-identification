@@ -70,6 +70,17 @@ def test_pairwise_recall_reports_rank1_through_rank5() -> None:
     )
     assert hardest["difficulty_score_r1_to_r5"] == pytest.approx(0.3)
     assert result.per_class[0]["top_hardest"][0]["other_class_name"] == "B"
+    class_a_confusions = result.confusions_per_class[0]
+    assert class_a_confusions["error_top1_count"] == 2
+    assert class_a_confusions["error_top1_rate"] == pytest.approx(1.0)
+    assert class_a_confusions["top5_error_classifications"][0] == {
+        "predicted_label": 1,
+        "predicted_class_name": "B",
+        "confusion_count": 2,
+        "confusion_rate": 1.0,
+        "error_rank": 1,
+    }
+    assert len(class_a_confusions["all_other_class_confusions"]) == 2
 
 
 def test_pairwise_outputs_include_json_and_csv(tmp_path: Path) -> None:
@@ -90,6 +101,8 @@ def test_pairwise_outputs_include_json_and_csv(tmp_path: Path) -> None:
         "all_pairs_json",
         "per_class_json",
         "all_pairs_csv",
+        "top1_confusion_per_class_json",
+        "top1_confusion_all_directions_csv",
     }
     pairs = json.loads((tmp_path / artifacts["all_pairs_json"]).read_text(encoding="utf-8"))
     assert len(pairs) == 3
@@ -98,3 +111,15 @@ def test_pairwise_outputs_include_json_and_csv(tmp_path: Path) -> None:
     ).splitlines()[0]
     assert "balanced_recall_at_1" in csv_header
     assert "balanced_recall_at_5" in csv_header
+    confusions = json.loads(
+        (tmp_path / artifacts["top1_confusion_per_class_json"]).read_text(
+            encoding="utf-8"
+        )
+    )
+    assert len(confusions) == 3
+    assert "top5_error_classifications" in confusions[0]
+    confusion_lines = (
+        tmp_path / artifacts["top1_confusion_all_directions_csv"]
+    ).read_text(encoding="utf-8-sig").splitlines()
+    assert len(confusion_lines) == 1 + 3 * 2
+    assert "confusion_count" in confusion_lines[0]

@@ -267,13 +267,16 @@ bash Annotation/fg_retrain/scripts/run_e1_vit_vision_laux.sh
 
 若指定多个可见 GPU，代码使用 DataParallel，在全部图像特征汇总后统一计算全局 Laux；中断后会从 `checkpoint_last.pt` 自动续训。
 
-结果固定写入：
+默认结果写入：
 
 ```text
 Annotation/fg_retrain/outputs/E1_VIT_VisionL/
 ```
 
 其中包括训练历史、恢复检查点、最终纯视觉模型、测试特征、逐 Query 结果和总指标。
+需要与历史结果隔离时，可传入`--run-name <name>`，新产物会写入
+`Annotation/fg_retrain/outputs/E1_VIT_VisionL/<name>/`；同名目录已存在时会自动
+添加数字后缀。
 
 ## 10. E0/E1共有的类别对困难度指标
 
@@ -303,6 +306,12 @@ pairwise_difficulty_summary.json
 pairwise_difficulty_all_pairs.json
 pairwise_difficulty_all_pairs.csv
 pairwise_difficulty_per_class.json
+top1_confusion_per_class.json
+top1_confusion_all_directions.csv
 ```
 
-其中全类别对JSON/CSV包含19,110对，逐类别文件为每种车型直接列出Top-20困难邻居。已有embedding可以通过`fg_retrain.analyze_pairwise_difficulty`补算，无需重新训练。
+其中全类别对JSON/CSV包含19,110对，逐类别困难度文件为每种车型列出
+Top-20综合困难邻居。`top1_confusion_per_class.json`则对每类列出与其余
+195类的完整Top-1错分次数/比例，并单独给出按实际错分次数排序的
+`top5_error_classifications`；同等方向性统计也保存为方便排序的CSV。已有embedding
+可以通过`fg_retrain.analyze_pairwise_difficulty`补算，无需重新训练。
